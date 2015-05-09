@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<Actions>
+	<SupportURL>http://wiki.indigodomo.com/doku.php?id=plugins:example_dev_1</SupportURL>
+
+  <!--
+  <Action id="ping" deviceFilter="self">
+		<Name>Ping</Name>
+		<CallbackMethod>ping</CallbackMethod>
+	</Action>
+  -->
+</Actions>

@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<PluginConfig>
+	<Field type="checkbox" id="debug">
+		<Label>Enable debugging:</Label>
+		<Description>(for advanced users only)</Description>
+	</Field>
+</PluginConfig>
+

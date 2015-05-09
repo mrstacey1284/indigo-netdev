@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<Devices>
+  <Device type="custom" id="mac_addr">
+    <Name>Ethernet Device</Name>
+
+    <ConfigUI>
+      <Field id="address" type="textfield">
+        <Label>Hardware Address</Label>
+      </Field>
+    </ConfigUI>
+
+    <States>
+      <State id="present">
+        <ValueType>Boolean</ValueType>
+        <TriggerLabel>Device is Present</TriggerLabel>
+        <ControlPageLabel>Device is Present</ControlPageLabel>
+      </State>
+
+      <State id="status">
+        <ValueType>String</ValueType>
+        <TriggerLabel>Device Status Changes</TriggerLabel>
+        <ControlPageLabel>Device Status Changes</ControlPageLabel>
+      </State>
+
+      <State id="lastNoticed">
+        <ValueType>String</ValueType>
+        <TriggerLabel>Last Seen</TriggerLabel>
+        <ControlPageLabel>Last Seen</ControlPageLabel>
+      </State>
+    </States>
+
+    <UiDisplayStateId>status</UiDisplayStateId>
+  </Device>
+
+  <Device type="custom" id="hostname">
+    <Name>Network Host</Name>
+
+    <ConfigUI>
+      <Field id="address" type="textfield">
+        <Label>Hostname or IP Address</Label>
+      </Field>
+    </ConfigUI>
+
+    <States>
+      <State id="present">
+        <ValueType>Boolean</ValueType>
+        <TriggerLabel>Device is Present</TriggerLabel>
+        <ControlPageLabel>Device is Present</ControlPageLabel>
+      </State>
+
+      <State id="status">
+        <ValueType>String</ValueType>
+        <TriggerLabel>Device Status Changes</TriggerLabel>
+        <ControlPageLabel>Device Status Changes</ControlPageLabel>
+      </State>
+    </States>
+
+    <UiDisplayStateId>status</UiDisplayStateId>
+  </Device>
+</Devices>
