@@ -1,9 +1,22 @@
 <?xml version="1.0"?>
 
 <PluginConfig>
+  <Field id = "info001" type = "label">
+    <Label>Plugin must be reloaded for changes to take effect.</Label>
+  </Field>
+
+	<Field type="textfield" id="retryInterval" defaultValue="60">
+		<Label>Retry interval (seconds):</Label>
+	</Field>
+
+	<Field type="textfield" id="retryCount" defaultValue="5">
+		<Label>'Inactive' retry count:</Label>
+	</Field>
+
+  <Field id = "separator001" type = "separator" />
+
 	<Field type="checkbox" id="debug">
 		<Label>Enable debugging:</Label>
-		<Description>(for advanced users only)</Description>
 	</Field>
 </PluginConfig>
 

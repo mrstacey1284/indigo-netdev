@@ -3,7 +3,7 @@
 <plist version="1.0">
   <dict>
     <key>PluginVersion</key>
-    <string>1.0.0</string>
+    <string>1.0.1</string>
     <key>ServerApiVersion</key>
     <string>1.19</string>
     <key>IwsApiVersion</key>
@@ -14,12 +14,5 @@
     <string>com.heddings.indigo.net_device</string>
     <key>CFBundleVersion</key>
     <string>1.0.0</string>
-    <key>CFBundleURLTypes</key>
-    <array>
-      <dict>
-        <key>CFBundleURLName</key>
-        <string>http://www.apple.com</string>
-      </dict>
-    </array>
   </dict>
 </plist>

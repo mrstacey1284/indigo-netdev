@@ -10,10 +10,10 @@
     </ConfigUI>
 
     <States>
-      <State id="present">
+      <State id="active">
         <ValueType>Boolean</ValueType>
-        <TriggerLabel>Device is Present</TriggerLabel>
-        <ControlPageLabel>Device is Present</ControlPageLabel>
+        <TriggerLabel>Device is Active</TriggerLabel>
+        <ControlPageLabel>Device is Active</ControlPageLabel>
       </State>
 
       <State id="status">
@@ -22,36 +22,10 @@
         <ControlPageLabel>Device Status Changes</ControlPageLabel>
       </State>
 
-      <State id="lastNoticed">
+      <State id="lastSeenAt">
         <ValueType>String</ValueType>
-        <TriggerLabel>Last Seen</TriggerLabel>
-        <ControlPageLabel>Last Seen</ControlPageLabel>
-      </State>
-    </States>
-
-    <UiDisplayStateId>status</UiDisplayStateId>
-  </Device>
-
-  <Device type="custom" id="hostname">
-    <Name>Network Host</Name>
-
-    <ConfigUI>
-      <Field id="address" type="textfield">
-        <Label>Hostname or IP Address</Label>
-      </Field>
-    </ConfigUI>
-
-    <States>
-      <State id="present">
-        <ValueType>Boolean</ValueType>
-        <TriggerLabel>Device is Present</TriggerLabel>
-        <ControlPageLabel>Device is Present</ControlPageLabel>
-      </State>
-
-      <State id="status">
-        <ValueType>String</ValueType>
-        <TriggerLabel>Device Status Changes</TriggerLabel>
-        <ControlPageLabel>Device Status Changes</ControlPageLabel>
+        <TriggerLabel>Device Last Seen</TriggerLabel>
+        <ControlPageLabel>Device Last Seen</ControlPageLabel>
       </State>
     </States>
 
