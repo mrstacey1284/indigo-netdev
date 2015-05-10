@@ -13,7 +13,6 @@ class Plugin(indigo.PluginBase):
     def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
         indigo.PluginBase.__init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs)
 
-        # TODO validate UI config options
         self.retryCount = int(pluginPrefs.get('retryCount', 5))
         self.retryInterval = int(pluginPrefs.get('retryInterval', 60))
         self.debug = pluginPrefs.get('debug', False)
@@ -23,6 +22,25 @@ class Plugin(indigo.PluginBase):
     #---------------------------------------------------------------------------
     def __del__(self):
         indigo.PluginBase.__del__(self)
+
+    #---------------------------------------------------------------------------
+    def validatePrefsConfigUi(self, values):
+        valid = True
+        errors = indigo.Dict()
+
+        try:
+            int(values['retryInterval'])
+        except:
+            valid = False
+            errors['retryInterval'] = u"Retry interval must be an integer"
+
+        try:
+            int(values['retryCount'])
+        except:
+            valid = False
+            errors['retryCount'] = u"Retry count must be an integer"
+
+        return (valid, values, errors)
 
     #---------------------------------------------------------------------------
     def startup(self):
