@@ -64,6 +64,11 @@ class Plugin(indigo.PluginBase):
     def deviceStopComm(self, device):
         self.debugLog('Stopping device comm: ' + device.name)
 
+        # XXX this has the side effect of firing triggers on device states
+        # when the plugin is stopped...  is that the right thing to do?
+        device.updateStateOnServer('active', False)
+        device.updateStateOnServer('status', 'Disabled')
+
     #---------------------------------------------------------------------------
     def runConcurrentThread(self):
         self.debugLog('Thread Started')
@@ -79,7 +84,7 @@ class Plugin(indigo.PluginBase):
 
                 # update all active and configured devices
                 for device in indigo.devices.itervalues('self'):
-                    if device and device.configured:
+                    if device and device.configured and device.enabled:
                         self.updateDeviceStates(device)
 
                 # sleep until the next check
