@@ -15,6 +15,26 @@
 
   <Field id = "separator001" type = "separator" />
 
+	<Field type="textfield" id="routerAddr" defaultValue="192.168.0.1">
+		<Label>Router IP address:</Label>
+	</Field>
+
+	<Field type="textfield" id="routerUser" defaultValue="admin">
+		<Label>Router username:</Label>
+	</Field>
+
+  <!--
+	<Field type="textfield" id="routerPasswd" defaultValue="admin">
+		<Label>Router password:</Label>
+	</Field>
+  -->
+
+  <Field type="textfield" id="routerArpTable" defaultValue="cat /proc/net/arp">
+		<Label>Router ARP table:</Label>
+	</Field>
+
+  <Field id = "separator002" type = "separator" />
+
 	<Field type="checkbox" id="debug">
 		<Label>Enable debugging:</Label>
 	</Field>

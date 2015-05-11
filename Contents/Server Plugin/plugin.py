@@ -13,9 +13,23 @@ class Plugin(indigo.PluginBase):
     def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
         indigo.PluginBase.__init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs)
 
+        self.debug = pluginPrefs.get('debug', False)
+
+        # configure router connection settings
+        routerAddr = str(pluginPrefs.get('routerAddr'))
+        routerUser = str(pluginPrefs.get('routerUser', None))
+        #TODO routerPasswd = pluginPrefs.get('routerPasswd')
+        routerArpTable = str(pluginPrefs.get('routerArpTable'))
+
+        conn = (routerUser + '@' if routerUser else '') + routerAddr
+        self.arpTableCmd = ['/usr/bin/ssh', conn, routerArpTable]
+        self.debugLog('get arp: ' + str(self.arpTableCmd))
+
         self.retryCount = int(pluginPrefs.get('retryCount', 5))
         self.retryInterval = int(pluginPrefs.get('retryInterval', 60))
-        self.debug = pluginPrefs.get('debug', False)
+
+        self.debugLog('retry x' + str(self.retryCount)
+                      + ' @ ' + str(self.retryInterval) + 'sec')
 
         self.arp_cache = None
 
@@ -57,12 +71,12 @@ class Plugin(indigo.PluginBase):
 
     #---------------------------------------------------------------------------
     def deviceStartComm(self, device):
-        self.debugLog('Starting device comm: ' + device.name)
+        self.debugLog('Starting device: ' + device.name)
         self.updateDeviceStates(device)
 
     #---------------------------------------------------------------------------
     def deviceStopComm(self, device):
-        self.debugLog('Stopping device comm: ' + device.name)
+        self.debugLog('Stopping device: ' + device.name)
 
         # XXX this has the side effect of firing triggers on device states
         # when the plugin is stopped...  is that the right thing to do?
@@ -73,24 +87,20 @@ class Plugin(indigo.PluginBase):
     def runConcurrentThread(self):
         self.debugLog('Thread Started')
 
-        try:
+        while True:
+            # devices are updated when added, so we'll start with a sleep
+            self.sleep(self.retryInterval)
 
-            while True:
-                # devices are updated when added, so we'll start with a sleep
-                self.sleep(self.retryInterval)
+            # grab the current arp table
+            self.rebuildArpCache()
 
-                # grab the current arp table
-                self.rebuildArpCache()
+            # update all active and configured devices
+            for device in indigo.devices.itervalues('self'):
+                if device and device.configured and device.enabled:
+                    self.updateDeviceStates(device)
 
-                # update all active and configured devices
-                for device in indigo.devices.itervalues('self'):
-                    if device and device.configured and device.enabled:
-                        self.updateDeviceStates(device)
-
-                # sleep until the next check
-                self.debugLog('Thread Sleep: ' + str(self.retryInterval))
-
-        except self.StopThread: pass
+            # sleep until the next check
+            self.debugLog('Thread Sleep: ' + str(self.retryInterval))
 
         self.debugLog('Thread Stopped')
 
@@ -128,17 +138,11 @@ class Plugin(indigo.PluginBase):
 
     #---------------------------------------------------------------------------
     def rebuildArpCache(self):
-        # TODO make these plugin config params
-        router_user = 'root'
-        router_addr = '10.0.0.1'
-        router_passwd = None
-        cmd = ['/usr/bin/ssh', router_user + '@' + router_addr, 'cat /proc/net/arp']
-
         # XXX the local arp table doesn't seem as reliable as the router,
         # but it would be much nicer to avoid depending on ssh
         #cmd = ['/usr/sbin/arp', '-a']
 
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(self.arpTableCmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         pout, perr = proc.communicate()
 
         cache = [ ]
