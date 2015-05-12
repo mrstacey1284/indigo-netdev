@@ -31,4 +31,36 @@
 
     <UiDisplayStateId>status</UiDisplayStateId>
   </Device>
+
+  <Device type="custom" id="ip_addr">
+    <Name>Internet Device</Name>
+
+    <ConfigUI>
+      <Field id="address" type="textfield">
+        <Label>IP address or hostname</Label>
+      </Field>
+    </ConfigUI>
+
+    <States>
+      <State id="active">
+        <ValueType>Boolean</ValueType>
+        <TriggerLabel>Device is Active</TriggerLabel>
+        <ControlPageLabel>Device is Active</ControlPageLabel>
+      </State>
+
+      <State id="status">
+        <ValueType>String</ValueType>
+        <TriggerLabel>Device Status Changes</TriggerLabel>
+        <ControlPageLabel>Device Status Changes</ControlPageLabel>
+      </State>
+
+      <State id="lastSeenAt">
+        <ValueType>String</ValueType>
+        <TriggerLabel>Device Last Seen</TriggerLabel>
+        <ControlPageLabel>Device Last Seen</ControlPageLabel>
+      </State>
+    </States>
+
+    <UiDisplayStateId>status</UiDisplayStateId>
+  </Device>
 </Devices>

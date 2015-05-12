@@ -3,6 +3,14 @@
 import time
 import subprocess
 
+from urllib2 import urlopen
+
+# since Indigo is using Python 2.5 and most of the socket timeouts
+# weren't added until 2.6, we'll just set the global timeout here...
+
+import socket
+socket.setdefaulttimeout(1)
+
 # NOTE most of the pending improvements here are in building the ARP cache
 # could add some additional status checks on active devices, e.g. ping
 
@@ -109,8 +117,8 @@ class Plugin(indigo.PluginBase):
         self.debugLog('Update Device: ' + device.name)
         props = device.pluginProps
 
-        # the device is in the current arp cache
-        if any(entry['eth_addr'] == device.address for entry in self.arp_cache):
+        # determine if the device is active...
+        if self.is_active(device):
             self.debugLog('  - Device is ACTIVE')
 
             device.updateStateOnServer('active', True)
@@ -162,4 +170,48 @@ class Plugin(indigo.PluginBase):
             self.debugLog('ARP: ' + str(entry))
 
         self.arp_cache = cache
+
+    #---------------------------------------------------------------------------
+    def is_active(self, device):
+        type = device.deviceTypeId
+
+        if type == 'mac_addr':
+            return self.is_present(device.address)
+
+        elif type == 'ip_addr':
+            return self.can_reach(device.address)
+
+        raise Exception('unknown device type: ' + type)
+
+    #---------------------------------------------------------------------------
+    ## determine if the specific device is in the ARP cache
+    def is_present(self, eth_addr):
+        self.debugLog('search: ' + eth_addr)
+
+        # bail on the first match...
+        for entry in self.arp_cache:
+            if entry['eth_addr'] == eth_addr:
+                return True
+
+        # default case - no match
+        return False
+
+    #---------------------------------------------------------------------------
+    ## determine if the specific host is reachable
+    def can_reach(self, host):
+        tuple = host.split(':')
+        server = tuple[0]
+        port = int(tuple[1])
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        self.debugLog('connect: ' + server + ':' + str(port))
+
+        try:
+            sock.connect((server, port))
+            sock.close()
+            return True
+        except:
+            pass
+
+        return False
 
