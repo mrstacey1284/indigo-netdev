@@ -5,7 +5,7 @@
     <Label>Plugin must be reloaded for changes to take effect.</Label>
   </Field>
 
-	<Field type="textfield" id="retryInterval" defaultValue="60">
+	<Field type="textfield" id="refreshInterval" defaultValue="60">
 		<Label>Refresh interval (seconds):</Label>
 	</Field>
 

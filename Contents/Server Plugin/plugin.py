@@ -28,14 +28,10 @@ class Plugin(indigo.PluginBase):
         self.debugLog('get arp: ' + str(self.arpTableCmd))
 
         self.retryCount = int(pluginPrefs.get('retryCount', 5))
-        self.retryInterval = int(pluginPrefs.get('retryInterval', 60))
-
-        self.debugLog('retry x' + str(self.retryCount)
-                      + ' @ ' + str(self.retryInterval) + 'sec')
+        self.refreshInterval = int(pluginPrefs.get('refreshInterval', 60))
 
         connectionTimeout = int(pluginPrefs.get('connectionTimeout', 5))
         socket.setdefaulttimeout(connectionTimeout)
-        self.debugLog('connection timeout: ' + str(connectionTimeout))
 
         self.arp_cache = None
 
@@ -49,10 +45,10 @@ class Plugin(indigo.PluginBase):
         errors = indigo.Dict()
 
         try:
-            int(values['retryInterval'])
+            int(values['refreshInterval'])
         except:
             valid = False
-            errors['retryInterval'] = u"Retry interval must be an integer"
+            errors['refreshInterval'] = u"Refresh interval must be an integer"
 
         try:
             int(values['retryCount'])
@@ -101,7 +97,7 @@ class Plugin(indigo.PluginBase):
 
         while True:
             # devices are updated when added, so we'll start with a sleep
-            self.sleep(self.retryInterval)
+            self.sleep(self.refreshInterval)
 
             # grab the current arp table
             self.rebuildArpCache()
@@ -112,7 +108,7 @@ class Plugin(indigo.PluginBase):
                     self.updateDeviceStates(device)
 
             # sleep until the next check
-            self.debugLog('Thread Sleep: ' + str(self.retryInterval))
+            self.debugLog('Thread Sleep: ' + str(self.refreshInterval))
 
         self.debugLog('Thread Stopped')
 
@@ -132,19 +128,23 @@ class Plugin(indigo.PluginBase):
         elif type == 'ssh':
             self.updateDeviceStates_ssh(device)
 
-        # TODO support retry count
-        device.replacePluginPropsOnServer(props)
-
     #---------------------------------------------------------------------------
     def updateDeviceStates_mac_addr(self, device):
-        props = device.pluginProps
-        addr = props['address']
+        addr = device.pluginProps['address']
 
+        # the device is currently in the ARP table
         if self.isPresentInArpTable(addr):
+            self.debugLog(device.name + ' is ACTIVE')
+            self.resetRetryCount(device)
+
             device.updateStateOnServer('active', True)
             device.updateStateOnServer('status', 'Active')
             device.updateStateOnServer('lastSeenAt', time.strftime('%c'))
-        else:
+
+        # the device isn't there and we are out of retries
+        elif not self.retry(device):
+            self.debugLog(device.name + ' is NOT active')
+
             device.updateStateOnServer('active', False)
             device.updateStateOnServer('status', 'Inactive')
 
@@ -154,10 +154,18 @@ class Plugin(indigo.PluginBase):
         host = props['address']
         port = int(props['port'])
 
+        # the host is online and reachable
         if self.hostIsReachable(host, port):
+            self.debugLog(device.name + ' is AVAILABLE')
+            self.resetRetryCount(device)
+
             device.updateStateOnServer('active', True)
             device.updateStateOnServer('status', 'Active')
-        else:
+
+        # we are offline if the retries fail
+        elif not self.retry(device):
+            self.debugLog(device.name + ' is UNAVAILABLE')
+
             device.updateStateOnServer('active', False)
             device.updateStateOnServer('status', 'Inactive')
 
@@ -167,9 +175,15 @@ class Plugin(indigo.PluginBase):
         host = props['address']
         port = int(props['port'])
 
+        # the host is online and reachable
         if self.hostIsReachable(host, port):
+            self.debugLog(device.name + ' is ONLINE')
+            self.resetRetryCount(device)
             device.updateStateOnServer('onOffState', 'on')
-        else:
+
+        # we are offline if the retries fail
+        elif not self.retry(device):
+            self.debugLog(device.name + ' is OFFLINE')
             device.updateStateOnServer('onOffState', 'off')
 
     #---------------------------------------------------------------------------
@@ -178,10 +192,39 @@ class Plugin(indigo.PluginBase):
         host = props['address']
         port = int(props['port'])
 
+        # the host is online and reachable
         if self.hostIsReachable(host, port):
+            self.debugLog(device.name + ' is ONLINE')
+            self.resetRetryCount(device)
             device.updateStateOnServer('onOffState', 'on')
-        else:
+
+        # we are offline if the retries fail
+        elif not self.retry(device):
+            self.debugLog(device.name + ' is OFFLINE')
             device.updateStateOnServer('onOffState', 'off')
+
+    #---------------------------------------------------------------------------
+    def resetRetryCount(self, device):
+        props = device.pluginProps
+        props['retry'] = self.retryCount
+        device.replacePluginPropsOnServer(props)
+
+    #---------------------------------------------------------------------------
+    def retry(self, device):
+        props = device.pluginProps
+
+        self.debugLog(device.name + ' - retry:' + str(props['retry']))
+
+        # the device has retries remaining...
+        if props.get('retry', 0) > 0:
+            props['retry'] -= 1
+
+        # the device is out of retries...
+        else:
+            props['retry'] = 0
+
+        device.replacePluginPropsOnServer(props)
+        return (props['retry'] > 0)
 
     #---------------------------------------------------------------------------
     def rebuildArpCache(self):
