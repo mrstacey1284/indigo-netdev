@@ -1,19 +1,23 @@
 <?xml version="1.0"?>
 
 <PluginConfig>
-  <Field id = "info001" type = "label">
+  <Field id="info001" type="label">
     <Label>Plugin must be reloaded for changes to take effect.</Label>
   </Field>
 
 	<Field type="textfield" id="retryInterval" defaultValue="60">
-		<Label>Retry interval (seconds):</Label>
+		<Label>Refresh interval (seconds):</Label>
+	</Field>
+
+	<Field type="textfield" id="connectionTimeout" defaultValue="5">
+		<Label>Connection timeout (seconds):</Label>
 	</Field>
 
 	<Field type="textfield" id="retryCount" defaultValue="5">
 		<Label>'Inactive' retry count:</Label>
 	</Field>
 
-  <Field id = "separator001" type = "separator" />
+  <Field id="separator001" type="separator" />
 
 	<Field type="textfield" id="routerAddr" defaultValue="192.168.0.1">
 		<Label>Router IP address:</Label>
@@ -33,7 +37,7 @@
 		<Label>Router ARP table:</Label>
 	</Field>
 
-  <Field id = "separator002" type = "separator" />
+  <Field id="separator002" type="separator" />
 
 	<Field type="checkbox" id="debug">
 		<Label>Enable debugging:</Label>

@@ -2,14 +2,10 @@
 
 import time
 import subprocess
+import socket
+import telnetlib
 
 from urllib2 import urlopen
-
-# since Indigo is using Python 2.5 and most of the socket timeouts
-# weren't added until 2.6, we'll just set the global timeout here...
-
-import socket
-socket.setdefaulttimeout(1)
 
 # NOTE most of the pending improvements here are in building the ARP cache
 # could add some additional status checks on active devices, e.g. ping
@@ -39,6 +35,10 @@ class Plugin(indigo.PluginBase):
         self.debugLog('retry x' + str(self.retryCount)
                       + ' @ ' + str(self.retryInterval) + 'sec')
 
+        connectionTimeout = int(pluginPrefs.get('connectionTimeout', 5))
+        socket.setdefaulttimeout(connectionTimeout)
+        self.debugLog('connection timeout: ' + str(connectionTimeout))
+
         self.arp_cache = None
 
     #---------------------------------------------------------------------------
@@ -61,6 +61,12 @@ class Plugin(indigo.PluginBase):
         except:
             valid = False
             errors['retryCount'] = u"Retry count must be an integer"
+
+        try:
+            int(values['connectionTimeout'])
+        except:
+            valid = False
+            errors['connectionTimeout'] = u"Connection timeout must be an integer"
 
         return (valid, values, errors)
 
@@ -102,7 +108,7 @@ class Plugin(indigo.PluginBase):
             # grab the current arp table
             self.rebuildArpCache()
 
-            # update all active and configured devices
+            # update all enabled and configured devices
             for device in indigo.devices.itervalues('self'):
                 if device and device.configured and device.enabled:
                     self.updateDeviceStates(device)
@@ -115,34 +121,61 @@ class Plugin(indigo.PluginBase):
     #---------------------------------------------------------------------------
     def updateDeviceStates(self, device):
         self.debugLog('Update Device: ' + device.name)
-        props = device.pluginProps
 
-        # determine if the device is active...
-        if self.is_active(device):
-            self.debugLog('  - Device is ACTIVE')
+        type = device.deviceTypeId
 
+        if type == 'mac_addr':
+            self.updateDevice_mac_addr(device)
+        elif type == 'hostname':
+            self.updateDevice_hostname(device)
+        elif type == 'telnet':
+            self.updateDevice_telnet(device)
+        elif type == 'ssh':
+            self.updateDevice_ssh(device)
+
+    #---------------------------------------------------------------------------
+    def updateDevice_mac_addr(self, device):
+        addr = device.pluginProps['address']
+
+        if self.isPresentInArpTable(addr):
             device.updateStateOnServer('active', True)
             device.updateStateOnServer('status', 'Active')
             device.updateStateOnServer('lastSeenAt', time.strftime('%c'))
-
-            props['retry'] = self.retryCount
-
-        # the device isn't there, but we have retries remaining...
-        elif props.get('retry', 0) > 0:
-            self.debugLog('  - Retry Device: ' + str(props['retry']))
-
-            props['retry'] -= 1
-
-        # the device isn't there and we are out of retries
         else:
-            self.debugLog('  - Device is NOT Active')
-
             device.updateStateOnServer('active', False)
             device.updateStateOnServer('status', 'Inactive')
 
-            props['retry'] = 0
+    #---------------------------------------------------------------------------
+    def updateDevice_hostname(self, device):
+        host = device.pluginProps['address']
+        port = int(device.pluginProps['port'])
 
-        device.replacePluginPropsOnServer(props)
+        if self.hostIsReachable(host, port):
+            device.updateStateOnServer('active', True)
+            device.updateStateOnServer('status', 'Active')
+        else:
+            device.updateStateOnServer('active', False)
+            device.updateStateOnServer('status', 'Inactive')
+
+    #---------------------------------------------------------------------------
+    def updateDevice_telnet(self, device):
+        host = device.pluginProps['address']
+        port = int(device.pluginProps['port'])
+
+        if self.hostIsReachable(host, port):
+            device.updateStateOnServer('onOffState', 'on')
+        else:
+            device.updateStateOnServer('onOffState', 'off')
+
+    #---------------------------------------------------------------------------
+    def updateDevice_ssh(self, device):
+        host = device.pluginProps['address']
+        port = int(device.pluginProps['port'])
+
+        if self.hostIsReachable(host, port):
+            device.updateStateOnServer('onOffState', 'on')
+        else:
+            device.updateStateOnServer('onOffState', 'off')
 
     #---------------------------------------------------------------------------
     def rebuildArpCache(self):
@@ -155,14 +188,14 @@ class Plugin(indigo.PluginBase):
 
         cache = [ ]
 
-        # this table is dependent on the mthod above
+        # this table is dependent on the method above
         # FIXME need to trim non-arp lines (e.g. table header)
         for line in pout.splitlines():
             parts = line.split()
             entry = {
                 'hostname': None,
                 'ip_addr': parts[0],
-                'eth_addr': parts[3].upper(),
+                'mac_addr': parts[3].upper(),
                 'iface': parts[5]
             }
 
@@ -172,25 +205,13 @@ class Plugin(indigo.PluginBase):
         self.arp_cache = cache
 
     #---------------------------------------------------------------------------
-    def is_active(self, device):
-        type = device.deviceTypeId
-
-        if type == 'mac_addr':
-            return self.is_present(device.address)
-
-        elif type == 'ip_addr':
-            return self.can_reach(device.address)
-
-        raise Exception('unknown device type: ' + type)
-
-    #---------------------------------------------------------------------------
     ## determine if the specific device is in the ARP cache
-    def is_present(self, eth_addr):
-        self.debugLog('search: ' + eth_addr)
+    def isPresentInArpTable(self, mac_addr):
+        self.debugLog('search: ' + mac_addr)
 
         # bail on the first match...
         for entry in self.arp_cache:
-            if entry['eth_addr'] == eth_addr:
+            if entry['mac_addr'] == mac_addr:
                 return True
 
         # default case - no match
@@ -198,20 +219,41 @@ class Plugin(indigo.PluginBase):
 
     #---------------------------------------------------------------------------
     ## determine if the specific host is reachable
-    def can_reach(self, host):
-        tuple = host.split(':')
-        server = tuple[0]
-        port = int(tuple[1])
+    def hostIsReachable(self, host, port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        self.debugLog('connect: ' + server + ':' + str(port))
+        self.debugLog('checking host - ' + host + ':' + str(port))
 
         try:
-            sock.connect((server, port))
+            sock.connect((host, port))
             sock.close()
             return True
         except:
             pass
 
         return False
+
+    #---------------------------------------------------------------------------
+    ## try to reach the host via simple telnet connection
+    def telnetLogin(self, host, port):
+        self.debugLog('connecting to ' + host + ':' + str(port))
+
+        try:
+            tn = telnetlib.Telnet(host, port)
+            # TODO support username & password
+            return tn
+
+        except:
+            return None
+
+    #---------------------------------------------------------------------------
+    ## Relay / Dimmer Action callback
+    def actionControlDimmerRelay(self, action, device):
+      self.debugLog(str(action.deviceAction) + ':' + device.name)
+
+      if action.deviceAction == indigo.kDimmerRelayAction.TurnOn:
+        pass
+
+      elif action.deviceAction == indigo.kDimmerRelayAction.TurnOff:
+        pass
 

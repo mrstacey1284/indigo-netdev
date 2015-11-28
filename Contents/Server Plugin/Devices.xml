@@ -32,12 +32,16 @@
     <UiDisplayStateId>status</UiDisplayStateId>
   </Device>
 
-  <Device type="custom" id="ip_addr">
+  <Device type="custom" id="hostname">
     <Name>Internet Device</Name>
 
     <ConfigUI>
       <Field id="address" type="textfield">
         <Label>IP address or hostname</Label>
+      </Field>
+
+      <Field id="port" type="textfield" defaultValue="80">
+        <Label>Port</Label>
       </Field>
     </ConfigUI>
 
@@ -53,14 +57,46 @@
         <TriggerLabel>Device Status Changes</TriggerLabel>
         <ControlPageLabel>Device Status Changes</ControlPageLabel>
       </State>
-
-      <State id="lastSeenAt">
-        <ValueType>String</ValueType>
-        <TriggerLabel>Device Last Seen</TriggerLabel>
-        <ControlPageLabel>Device Last Seen</ControlPageLabel>
-      </State>
     </States>
 
     <UiDisplayStateId>status</UiDisplayStateId>
+  </Device>
+
+  <Device type="relay" id="telnet">
+    <Name>Telnet Device</Name>
+
+    <ConfigUI>
+      <Field id="address" type="textfield">
+        <Label>IP address or hostname</Label>
+      </Field>
+
+      <Field id="port" type="textfield" defaultValue="23">
+        <Label>Telnet port</Label>
+      </Field>
+
+      <Field id="cmd_prompt" type="textfield" defaultValue="#">
+        <Label>Command prompt</Label>
+      </Field>
+    </ConfigUI>
+
+    <States>
+    </States>
+  </Device>
+
+  <Device type="relay" id="ssh">
+    <Name>SSH Device</Name>
+
+    <ConfigUI>
+      <Field id="address" type="textfield">
+        <Label>IP address or hostname</Label>
+      </Field>
+
+      <Field id="port" type="textfield" defaultValue="22">
+        <Label>SSH port</Label>
+      </Field>
+    </ConfigUI>
+
+    <States>
+    </States>
   </Device>
 </Devices>
