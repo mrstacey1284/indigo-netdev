@@ -5,8 +5,6 @@ import subprocess
 import socket
 import telnetlib
 
-from urllib2 import urlopen
-
 # NOTE most of the pending improvements here are in building the ARP cache
 # could add some additional status checks on active devices, e.g. ping
 
@@ -94,8 +92,8 @@ class Plugin(indigo.PluginBase):
 
         # XXX this has the side effect of firing triggers on device states
         # when the plugin is stopped...  is that the right thing to do?
-        device.updateStateOnServer('active', False)
-        device.updateStateOnServer('status', 'Disabled')
+        #device.updateStateOnServer('active', False)
+        #device.updateStateOnServer('status', 'Disabled')
 
     #---------------------------------------------------------------------------
     def runConcurrentThread(self):
@@ -123,19 +121,24 @@ class Plugin(indigo.PluginBase):
         self.debugLog('Update Device: ' + device.name)
 
         type = device.deviceTypeId
+        props = device.pluginProps
 
         if type == 'mac_addr':
-            self.updateDevice_mac_addr(device)
+            self.updateDeviceStates_mac_addr(device)
         elif type == 'hostname':
-            self.updateDevice_hostname(device)
+            self.updateDeviceStates_hostname(device)
         elif type == 'telnet':
-            self.updateDevice_telnet(device)
+            self.updateDeviceStates_telnet(device)
         elif type == 'ssh':
-            self.updateDevice_ssh(device)
+            self.updateDeviceStates_ssh(device)
+
+        # TODO support retry count
+        device.replacePluginPropsOnServer(props)
 
     #---------------------------------------------------------------------------
-    def updateDevice_mac_addr(self, device):
-        addr = device.pluginProps['address']
+    def updateDeviceStates_mac_addr(self, device):
+        props = device.pluginProps
+        addr = props['address']
 
         if self.isPresentInArpTable(addr):
             device.updateStateOnServer('active', True)
@@ -146,9 +149,10 @@ class Plugin(indigo.PluginBase):
             device.updateStateOnServer('status', 'Inactive')
 
     #---------------------------------------------------------------------------
-    def updateDevice_hostname(self, device):
-        host = device.pluginProps['address']
-        port = int(device.pluginProps['port'])
+    def updateDeviceStates_hostname(self, device):
+        props = device.pluginProps
+        host = props['address']
+        port = int(props['port'])
 
         if self.hostIsReachable(host, port):
             device.updateStateOnServer('active', True)
@@ -158,9 +162,10 @@ class Plugin(indigo.PluginBase):
             device.updateStateOnServer('status', 'Inactive')
 
     #---------------------------------------------------------------------------
-    def updateDevice_telnet(self, device):
-        host = device.pluginProps['address']
-        port = int(device.pluginProps['port'])
+    def updateDeviceStates_telnet(self, device):
+        props = device.pluginProps
+        host = props['address']
+        port = int(props['port'])
 
         if self.hostIsReachable(host, port):
             device.updateStateOnServer('onOffState', 'on')
@@ -168,9 +173,10 @@ class Plugin(indigo.PluginBase):
             device.updateStateOnServer('onOffState', 'off')
 
     #---------------------------------------------------------------------------
-    def updateDevice_ssh(self, device):
-        host = device.pluginProps['address']
-        port = int(device.pluginProps['port'])
+    def updateDeviceStates_ssh(self, device):
+        props = device.pluginProps
+        host = props['address']
+        port = int(props['port'])
 
         if self.hostIsReachable(host, port):
             device.updateStateOnServer('onOffState', 'on')
@@ -205,7 +211,7 @@ class Plugin(indigo.PluginBase):
         self.arp_cache = cache
 
     #---------------------------------------------------------------------------
-    ## determine if the specific device is in the ARP cache
+    # determine if the specific device is in the ARP cache
     def isPresentInArpTable(self, mac_addr):
         self.debugLog('search: ' + mac_addr)
 
@@ -218,23 +224,24 @@ class Plugin(indigo.PluginBase):
         return False
 
     #---------------------------------------------------------------------------
-    ## determine if the specific host is reachable
+    # determine if the specific host is reachable
     def hostIsReachable(self, host, port):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
         self.debugLog('checking host - ' + host + ':' + str(port))
 
+        ret = None
+
         try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.connect((host, port))
             sock.close()
-            return True
+            ret = True
         except:
-            pass
+            ret = False
 
-        return False
+        return ret
 
     #---------------------------------------------------------------------------
-    ## try to reach the host via simple telnet connection
+    # try to reach the host via simple telnet connection
     def telnetLogin(self, host, port):
         self.debugLog('connecting to ' + host + ':' + str(port))
 
@@ -247,13 +254,60 @@ class Plugin(indigo.PluginBase):
             return None
 
     #---------------------------------------------------------------------------
-    ## Relay / Dimmer Action callback
+    # turn a device on
+    def turnOn(self, device):
+        pass  # XXX can't turn things back on
+
+    #---------------------------------------------------------------------------
+    # turn a device off
+    def turnOff(self, device):
+        type = device.deviceTypeId
+
+        if type == 'telnet':
+            self.turnOff_telnet(device)
+        elif type == 'ssh':
+            self.turnOff_ssh(device)
+
+    #---------------------------------------------------------------------------
+    def turnOff_telnet(self, device):
+        pass
+
+    #---------------------------------------------------------------------------
+    def turnOff_ssh(self, device):
+        pass
+
+    #---------------------------------------------------------------------------
+    # Relay / Dimmer Action callback
     def actionControlDimmerRelay(self, action, device):
-      self.debugLog(str(action.deviceAction) + ':' + device.name)
+        ctrl = action.deviceAction
+        self.debugLog('ctrl ' + device.name + ':' + str(ctrl))
 
-      if action.deviceAction == indigo.kDimmerRelayAction.TurnOn:
-        pass
+        #### TURN ON ####
+        if ctrl == indigo.kDimmerRelayAction.TurnOn:
+            self.turnOn(device)
 
-      elif action.deviceAction == indigo.kDimmerRelayAction.TurnOff:
-        pass
+        #### TURN OFF ####
+        elif ctrl == indigo.kDimmerRelayAction.TurnOff:
+            self.turnOff(device)
+
+        #### TOGGLE ####
+        elif ctrl == indigo.kDimmerRelayAction.Toggle:
+            if device.onOffState == 'on':
+                self.turnOff(device)
+            else:
+                self.turnOn(device)
+
+    #---------------------------------------------------------------------------
+    # General Action callback
+    def actionControlGeneral(self, action, device):
+        cmd = action.deviceAction
+        self.debugLog('cmd ' + device.name + ':' + str(cmd))
+
+        #### STATUS REQUEST ####
+        if cmd == indigo.kDeviceGeneralAction.RequestStatus:
+            self.updateDeviceStates(device)
+
+        #### BEEP ####
+        elif cmd == indigo.kDeviceGeneralAction.Beep:
+            pass
 
