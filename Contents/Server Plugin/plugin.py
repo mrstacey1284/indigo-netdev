@@ -1,12 +1,8 @@
 #! /usr/bin/env python
 
-import time
-import subprocess
+import logging
 import socket
 import telnetlib
-
-# NOTE most of the pending improvements here are in building the ARP cache
-# could add some additional status checks on active devices, e.g. ping
 
 ################################################################################
 class Plugin(indigo.PluginBase):
@@ -15,25 +11,9 @@ class Plugin(indigo.PluginBase):
     def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
         indigo.PluginBase.__init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs)
 
-        self.debug = pluginPrefs.get('debug', False)
+        self._initializeLogging(int(pluginPrefs.get('logLevel', '20')))
 
-        # configure router connection settings
-        routerAddr = str(pluginPrefs.get('routerAddr'))
-        routerUser = str(pluginPrefs.get('routerUser', None))
-        #TODO routerPasswd = pluginPrefs.get('routerPasswd')
-        routerArpTable = str(pluginPrefs.get('routerArpTable'))
-
-        conn = (routerUser + '@' if routerUser else '') + routerAddr
-        self.arpTableCmd = ['/usr/bin/ssh', conn, routerArpTable]
-        self.debugLog('get arp: ' + str(self.arpTableCmd))
-
-        self.retryCount = int(pluginPrefs.get('retryCount', 5))
-        self.refreshInterval = int(pluginPrefs.get('refreshInterval', 60))
-
-        connectionTimeout = int(pluginPrefs.get('connectionTimeout', 5))
-        socket.setdefaulttimeout(connectionTimeout)
-
-        self.arp_cache = None
+        self.objects = dict()
 
     #---------------------------------------------------------------------------
     def __del__(self):
@@ -41,316 +21,178 @@ class Plugin(indigo.PluginBase):
 
     #---------------------------------------------------------------------------
     def validatePrefsConfigUi(self, values):
-        valid = True
         errors = indigo.Dict()
 
-        try:
-            int(values['refreshInterval'])
-        except:
-            valid = False
-            errors['refreshInterval'] = u"Refresh interval must be an integer"
+        self._validatePrefs_Int('refreshInterval', values, errors, min=1, max=6000)
+        self._validatePrefs_Int('connectionTimeout', values, errors, min=0, max=3000)
 
-        try:
-            int(values['retryCount'])
-        except:
-            valid = False
-            errors['retryCount'] = u"Retry count must be an integer"
-
-        try:
-            int(values['connectionTimeout'])
-        except:
-            valid = False
-            errors['connectionTimeout'] = u"Connection timeout must be an integer"
-
-        return (valid, values, errors)
+        return ((len(errors) == 0), values, errors)
 
     #---------------------------------------------------------------------------
-    def startup(self):
-        self.debugLog('Plugin startup')
-        self.rebuildArpCache()
+    def closedPrefsConfigUi(self, values, canceled):
+        if canceled: return
 
-    #---------------------------------------------------------------------------
-    def shutdown(self):
-        self.debugLog('Plugin shutdown')
-
-    #---------------------------------------------------------------------------
-    def didDeviceCommPropertyChange(self, origDev, newDev):
-        return origDev.pluginProps['address'] != newDev.pluginProps['address']
+        self._initializeLogging(int(values.get('logLevel', '20')))
 
     #---------------------------------------------------------------------------
     def deviceStartComm(self, device):
-        self.debugLog('Starting device: ' + device.name)
-        self.updateDeviceStates(device)
+        typeId = device.deviceTypeId
+
+        self.logger.debug(u'Starting device - %s [%s]', device.name, typeId)
+
+        if typeId == 'service':
+            obj = NetworkServiceDevice(device)
+            self.objects[device.id] = obj
+
+        else:
+            self.logger.error('unknown device type: %s', typeId)
 
     #---------------------------------------------------------------------------
     def deviceStopComm(self, device):
-        self.debugLog('Stopping device: ' + device.name)
+        self.logger.debug(u'Stopping device: %s', device.name)
 
-        # XXX this has the side effect of firing triggers on device states
-        # when the plugin is stopped...  is that the right thing to do?
-        #device.updateStateOnServer('active', False)
-        #device.updateStateOnServer('status', 'Disabled')
+        self.objects.pop(device.id, None)
 
     #---------------------------------------------------------------------------
     def runConcurrentThread(self):
-        self.debugLog('Thread Started')
+        self.logger.debug(u'Thread Started')
 
-        while True:
-            # devices are updated when added, so we'll start with a sleep
-            self.sleep(self.refreshInterval)
+        try:
 
-            # grab the current arp table
-            self.rebuildArpCache()
+            while not self.stopThread:
+                self._runLoopStep()
 
-            # update all enabled and configured devices
-            for device in indigo.devices.itervalues('self'):
-                if device and device.configured and device.enabled:
-                    self.updateDeviceStates(device)
+        except self.StopThread:
+            pass
 
-            # sleep until the next check
-            self.debugLog('Thread Sleep: ' + str(self.refreshInterval))
-
-        self.debugLog('Thread Stopped')
+        self.logger.debug(u'Thread Stopped')
 
     #---------------------------------------------------------------------------
-    def updateDeviceStates(self, device):
-        self.debugLog('Update Device: ' + device.name)
+    def _validatePrefs_Int(self, key, values, errors, min=None, max=None):
+        textVal = values.get(key, None)
+        if textVal is None:
+            errors[key] = '%s is required' % key
+            return False
 
-        type = device.deviceTypeId
-        props = device.pluginProps
+        intVal = None
 
-        if type == 'mac_addr':
-            self.updateDeviceStates_mac_addr(device)
-        elif type == 'hostname':
-            self.updateDeviceStates_hostname(device)
-        elif type == 'telnet':
-            self.updateDeviceStates_telnet(device)
-        elif type == 'ssh':
-            self.updateDeviceStates_ssh(device)
+        try:
+            intVal = int(textVal)
+        except:
+            errors[key] = '%s must be an integer' % key
+            return False
+
+        if min is not None and intVal < min:
+            errors[key] = '%s must be greater than %d' % (key, min)
+            return False
+
+        if max is not None and intVal > max:
+            errors[key] = '%s must be less than %d' % (key, max)
+            return False
+
+        return True
 
     #---------------------------------------------------------------------------
-    def updateDeviceStates_mac_addr(self, device):
-        addr = device.pluginProps['address']
+    def _initializeLogging(self, level=20):
+        self.logLevel = level
+        self.indigo_log_handler.setLevel(level)
 
-        # the device is currently in the ARP table
-        if self.isPresentInArpTable(addr):
-            self.debugLog(device.name + ' is ACTIVE')
-            self.resetRetryCount(device)
+    #---------------------------------------------------------------------------
+    def _runLoopStep(self):
+        # devices are updated when comms start, so we'll start with a sleep
+        refreshInterval = int(self.pluginPrefs.get('refreshInterval', 60))
+        self.logger.debug(u'Next update in %d seconds', refreshInterval)
+        self.sleep(refreshInterval)
+
+        # update all enabled and configured devices
+        for id in self.objects:
+            obj = self.objects[id]
+            obj.updateStatus()
+
+    #---------------------------------------------------------------------------
+    # Relay / Dimmer Action callback
+    def actionControlDimmerRelay(self, action, device):
+        act = action.deviceAction
+        self.logger.debug(u'actionControlDimmerRelay[%s] - %s', act, device.name)
+
+        obj = self.objects[device.id]
+
+        #### TURN ON ####
+        if act == indigo.kDimmerRelayAction.TurnOn:
+            obj.turnOn()
+
+        #### TURN OFF ####
+        elif act == indigo.kDimmerRelayAction.TurnOff:
+            obj.turnOff()
+
+        #### TOGGLE ####
+        elif act == indigo.kDimmerRelayAction.Toggle:
+            if device.onState:
+                obj.turnOff()
+            else:
+                obj.turnOn()
+
+    #---------------------------------------------------------------------------
+    # General Action callback
+    def actionControlGeneral(self, action, device):
+        act = action.deviceAction
+        self.logger.debug(u'actionControlGeneral[%s] - %s', act, device.name)
+
+        obj = self.objects[device.id]
+
+        #### STATUS REQUEST ####
+        if act == indigo.kDeviceGeneralAction.RequestStatus:
+            obj.updateStatus()
+
+        #### BEEP ####
+        elif act == indigo.kDeviceGeneralAction.Beep:
+            pass
+
+################################################################################
+class NetworkServiceDevice():
+
+    #---------------------------------------------------------------------------
+    def __init__(self, device):
+        # to emit Indigo events, logger must be a child of 'Plugin'
+        self.logger = logging.getLogger(u'Plugin.NetworkServiceDevice')
+
+        self.address = device.pluginProps['address']
+        self.port = int(device.pluginProps['port'])
+
+        self.device = device
+        self.updateStatus()
+
+    #---------------------------------------------------------------------------
+    # sub-classes should override this for their specific device states
+    def updateStatus(self):
+        device = self.device
+
+        if self.hostIsReachable():
+            self.logger.debug(device.name + ' is AVAILABLE')
 
             device.updateStateOnServer('active', True)
             device.updateStateOnServer('status', 'Active')
-            device.updateStateOnServer('lastSeenAt', time.strftime('%c'))
 
-        # the device isn't there and we are out of retries
-        elif not self.retry(device):
-            self.debugLog(device.name + ' is NOT active')
-
-            device.updateStateOnServer('active', False)
-            device.updateStateOnServer('status', 'Inactive')
-
-    #---------------------------------------------------------------------------
-    def updateDeviceStates_hostname(self, device):
-        props = device.pluginProps
-        host = props['address']
-        port = int(props['port'])
-
-        # the host is online and reachable
-        if self.hostIsReachable(host, port):
-            self.debugLog(device.name + ' is AVAILABLE')
-            self.resetRetryCount(device)
-
-            device.updateStateOnServer('active', True)
-            device.updateStateOnServer('status', 'Active')
-
-        # we are offline if the retries fail
-        elif not self.retry(device):
-            self.debugLog(device.name + ' is UNAVAILABLE')
-
-            device.updateStateOnServer('active', False)
-            device.updateStateOnServer('status', 'Inactive')
-
-    #---------------------------------------------------------------------------
-    def updateDeviceStates_telnet(self, device):
-        props = device.pluginProps
-        host = props['address']
-        port = int(props['port'])
-
-        # the host is online and reachable
-        if self.hostIsReachable(host, port):
-            self.debugLog(device.name + ' is ONLINE')
-            self.resetRetryCount(device)
-            device.updateStateOnServer('onOffState', 'on')
-
-        # we are offline if the retries fail
-        elif not self.retry(device):
-            self.debugLog(device.name + ' is OFFLINE')
-            device.updateStateOnServer('onOffState', 'off')
-
-    #---------------------------------------------------------------------------
-    def updateDeviceStates_ssh(self, device):
-        props = device.pluginProps
-        host = props['address']
-        port = int(props['port'])
-
-        # the host is online and reachable
-        if self.hostIsReachable(host, port):
-            self.debugLog(device.name + ' is ONLINE')
-            self.resetRetryCount(device)
-            device.updateStateOnServer('onOffState', 'on')
-
-        # we are offline if the retries fail
-        elif not self.retry(device):
-            self.debugLog(device.name + ' is OFFLINE')
-            device.updateStateOnServer('onOffState', 'off')
-
-    #---------------------------------------------------------------------------
-    def resetRetryCount(self, device):
-        props = device.pluginProps
-        props['retry'] = self.retryCount
-        device.replacePluginPropsOnServer(props)
-
-    #---------------------------------------------------------------------------
-    def retry(self, device):
-        props = device.pluginProps
-
-        self.debugLog(device.name + ' - retry:' + str(props['retry']))
-
-        # the device has retries remaining...
-        if props.get('retry', 0) > 0:
-            props['retry'] -= 1
-
-        # the device is out of retries...
         else:
-            props['retry'] = 0
+            self.logger.debug(device.name + ' is UNAVAILABLE')
 
-        device.replacePluginPropsOnServer(props)
-        return (props['retry'] > 0)
-
-    #---------------------------------------------------------------------------
-    def rebuildArpCache(self):
-        # XXX the local arp table doesn't seem as reliable as the router,
-        # but it would be much nicer to avoid depending on ssh
-        #cmd = ['/usr/sbin/arp', '-a']
-
-        proc = subprocess.Popen(self.arpTableCmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        pout, perr = proc.communicate()
-
-        cache = [ ]
-
-        # this table is dependent on the method above
-        # FIXME need to trim non-arp lines (e.g. table header)
-        for line in pout.splitlines():
-            parts = line.split()
-            entry = {
-                'hostname': None,
-                'ip_addr': parts[0],
-                'mac_addr': parts[3].upper(),
-                'iface': parts[5]
-            }
-
-            cache.append(entry)
-            self.debugLog('ARP: ' + str(entry))
-
-        self.arp_cache = cache
-
-    #---------------------------------------------------------------------------
-    # determine if the specific device is in the ARP cache
-    def isPresentInArpTable(self, mac_addr):
-        self.debugLog('search: ' + mac_addr)
-
-        # bail on the first match...
-        for entry in self.arp_cache:
-            if entry['mac_addr'] == mac_addr:
-                return True
-
-        # default case - no match
-        return False
+            device.updateStateOnServer('active', False)
+            device.updateStateOnServer('status', 'Inactive')
 
     #---------------------------------------------------------------------------
     # determine if the specific host is reachable
-    def hostIsReachable(self, host, port):
-        self.debugLog('checking host - ' + host + ':' + str(port))
+    def hostIsReachable(self):
+        self.logger.debug('checking host - %s:%d', self.address, self.port)
 
         ret = None
 
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((host, port))
+            sock.connect((self.address, self.port))
             sock.close()
             ret = True
         except:
             ret = False
 
         return ret
-
-    #---------------------------------------------------------------------------
-    # try to reach the host via simple telnet connection
-    def telnetLogin(self, host, port):
-        self.debugLog('connecting to ' + host + ':' + str(port))
-
-        try:
-            tn = telnetlib.Telnet(host, port)
-            # TODO support username & password
-            return tn
-
-        except:
-            return None
-
-    #---------------------------------------------------------------------------
-    # turn a device on
-    def turnOn(self, device):
-        pass  # XXX can't turn things back on
-
-    #---------------------------------------------------------------------------
-    # turn a device off
-    def turnOff(self, device):
-        type = device.deviceTypeId
-
-        if type == 'telnet':
-            self.turnOff_telnet(device)
-        elif type == 'ssh':
-            self.turnOff_ssh(device)
-
-    #---------------------------------------------------------------------------
-    def turnOff_telnet(self, device):
-        pass
-
-    #---------------------------------------------------------------------------
-    def turnOff_ssh(self, device):
-        pass
-
-    #---------------------------------------------------------------------------
-    # Relay / Dimmer Action callback
-    def actionControlDimmerRelay(self, action, device):
-        ctrl = action.deviceAction
-        self.debugLog('ctrl ' + device.name + ':' + str(ctrl))
-
-        #### TURN ON ####
-        if ctrl == indigo.kDimmerRelayAction.TurnOn:
-            self.turnOn(device)
-
-        #### TURN OFF ####
-        elif ctrl == indigo.kDimmerRelayAction.TurnOff:
-            self.turnOff(device)
-
-        #### TOGGLE ####
-        elif ctrl == indigo.kDimmerRelayAction.Toggle:
-            if device.onOffState == 'on':
-                self.turnOff(device)
-            else:
-                self.turnOn(device)
-
-    #---------------------------------------------------------------------------
-    # General Action callback
-    def actionControlGeneral(self, action, device):
-        cmd = action.deviceAction
-        self.debugLog('cmd ' + device.name + ':' + str(cmd))
-
-        #### STATUS REQUEST ####
-        if cmd == indigo.kDeviceGeneralAction.RequestStatus:
-            self.updateDeviceStates(device)
-
-        #### BEEP ####
-        elif cmd == indigo.kDeviceGeneralAction.Beep:
-            pass
 

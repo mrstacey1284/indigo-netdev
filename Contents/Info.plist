@@ -3,15 +3,15 @@
 <plist version="1.0">
   <dict>
     <key>PluginVersion</key>
-    <string>1.1.0</string>
+    <string>2.0.0</string>
     <key>ServerApiVersion</key>
     <string>1.19</string>
     <key>IwsApiVersion</key>
     <string>1.0.0</string>
     <key>CFBundleDisplayName</key>
-    <string>Network Device</string>
+    <string>Network Devices</string>
     <key>CFBundleIdentifier</key>
-    <string>com.heddings.indigo.net_device</string>
+    <string>com.heddings.indigo.netdev</string>
     <key>CFBundleVersion</key>
     <string>1.0.0</string>
   </dict>

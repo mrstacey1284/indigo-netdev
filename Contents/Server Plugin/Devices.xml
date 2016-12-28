@@ -1,39 +1,7 @@
 <?xml version="1.0"?>
 <Devices>
-  <Device type="custom" id="mac_addr">
-    <Name>Ethernet Device</Name>
-
-    <ConfigUI>
-      <Field id="address" type="textfield">
-        <Label>Hardware Address</Label>
-      </Field>
-    </ConfigUI>
-
-    <States>
-      <State id="active">
-        <ValueType>Boolean</ValueType>
-        <TriggerLabel>Device is Active</TriggerLabel>
-        <ControlPageLabel>Device is Active</ControlPageLabel>
-      </State>
-
-      <State id="status">
-        <ValueType>String</ValueType>
-        <TriggerLabel>Device Status Changes</TriggerLabel>
-        <ControlPageLabel>Device Status Changes</ControlPageLabel>
-      </State>
-
-      <State id="lastSeenAt">
-        <ValueType>String</ValueType>
-        <TriggerLabel>Device Last Seen</TriggerLabel>
-        <ControlPageLabel>Device Last Seen</ControlPageLabel>
-      </State>
-    </States>
-
-    <UiDisplayStateId>status</UiDisplayStateId>
-  </Device>
-
-  <Device type="custom" id="hostname">
-    <Name>Internet Device</Name>
+  <Device type="custom" id="service">
+    <Name>Network Service</Name>
 
     <ConfigUI>
       <Field id="address" type="textfield">
@@ -74,8 +42,25 @@
         <Label>Telnet port</Label>
       </Field>
 
+      <!-- create fields for username and password (not required) -->
+
+      <Field id="advConfigSep" type="separator" />
+      <Field id="advConfigLbl" type="label">
+        <Label>Advanced Configuration</Label>
+      </Field>
+
       <Field id="cmd_prompt" type="textfield" defaultValue="#">
         <Label>Command prompt</Label>
+      </Field>
+      <Field id="cmd_prompt_help" type="label" fontSize="mini" alignWithControl="true">
+        <Label>Identify the prompt used for interactive shells.</Label>
+      </Field>
+
+      <Field id="cmd_shutdown" type="textfield" defaultValue="shutdown now">
+        <Label>Shutdown command</Label>
+      </Field>
+      <Field id="cmd_shutdown_help" type="label" fontSize="mini" alignWithControl="true">
+        <Label>The command used to shut down the system from the command line.</Label>
       </Field>
     </ConfigUI>
 
@@ -93,6 +78,18 @@
 
       <Field id="port" type="textfield" defaultValue="22">
         <Label>SSH port</Label>
+      </Field>
+
+      <Field id="advConfigSep" type="separator" />
+      <Field id="advConfigLbl" type="label">
+        <Label>Advanced Configuration</Label>
+      </Field>
+
+      <Field id="cmd_shutdown" type="textfield" defaultValue="shutdown now">
+        <Label>Shutdown command</Label>
+      </Field>
+      <Field id="cmd_shutdown_help" type="label" fontSize="mini" alignWithControl="true">
+        <Label>The command used to shut down the system from the command line.</Label>
       </Field>
     </ConfigUI>
 
