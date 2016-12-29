@@ -163,6 +163,7 @@ class Plugin(indigo.PluginBase):
             pass
 
 ################################################################################
+# a generic service running on a specific port
 class NetworkServiceDevice():
 
     #---------------------------------------------------------------------------
@@ -211,6 +212,7 @@ class NetworkServiceDevice():
         return ret
 
 ################################################################################
+# a network service that supports on / off state (relay device)
 class ServerDevice(NetworkServiceDevice):
 
     #---------------------------------------------------------------------------
@@ -219,14 +221,17 @@ class ServerDevice(NetworkServiceDevice):
         self.logger = logging.getLogger(u'Plugin.ServerDevice')
 
     #---------------------------------------------------------------------------
+    # default behavior; subclasses should provide correct implementation
     def turnOff(self):
         self.logger.warn('Cannot turn off device: %s', self.device.name)
 
     #---------------------------------------------------------------------------
+    # default behavior; subclasses should provide correct implementation
     def turnOn(self):
         self.logger.warn('Cannot turn on device: %s', self.device.name)
 
     #---------------------------------------------------------------------------
+    # basic check to see if the server is responding
     def updateStatus(self):
         device = self.device
 
