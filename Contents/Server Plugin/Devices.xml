@@ -58,7 +58,7 @@
         <Label>Shutdown command</Label>
       </Field>
       <Field id="cmd_shutdown_help" type="label" fontSize="mini" alignWithControl="true">
-        <Label>The command used to shut down the system from the command line.</Label>
+        <Label>The command used to "turn off" the system from the command line.</Label>
       </Field>
     </ConfigUI>
 
@@ -86,7 +86,7 @@
         <Label>Shutdown command</Label>
       </Field>
       <Field id="cmd_shutdown_help" type="label" fontSize="mini" alignWithControl="true">
-        <Label>The command used to shut down the system from the command line.</Label>
+        <Label>The command used to "turn off" the system from the command line.</Label>
       </Field>
     </ConfigUI>
 
