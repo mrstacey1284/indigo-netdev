@@ -32,7 +32,7 @@
   </Device>
 
   <Device type="relay" id="telnet">
-    <Name>Telnet Device</Name>
+    <Name>Telnet Server</Name>
 
     <ConfigUI>
       <Field id="address" type="textfield">
@@ -67,7 +67,7 @@
   </Device>
 
   <Device type="relay" id="ssh">
-    <Name>SSH Device</Name>
+    <Name>SSH Server</Name>
 
     <ConfigUI>
       <Field id="address" type="textfield">

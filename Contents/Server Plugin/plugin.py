@@ -31,7 +31,6 @@ class Plugin(indigo.PluginBase):
     #---------------------------------------------------------------------------
     def closedPrefsConfigUi(self, values, canceled):
         if canceled: return
-
         self._initializeLogging(values)
 
     #---------------------------------------------------------------------------
@@ -45,11 +44,11 @@ class Plugin(indigo.PluginBase):
             self.objects[device.id] = obj
 
         elif typeId == 'ssh':
-            obj = ServerDevice_SSH(device)
+            obj = NetworkRelayDevice_SSH(device)
             self.objects[device.id] = obj
 
         elif typeId == 'telnet':
-            obj = ServerDevice_Telnet(device)
+            obj = NetworkRelayDevice_Telnet(device)
             self.objects[device.id] = obj
 
         else:
@@ -213,12 +212,12 @@ class NetworkServiceDevice():
 
 ################################################################################
 # a network service that supports on / off state (relay device)
-class ServerDevice(NetworkServiceDevice):
+class NetworkRelayDevice(NetworkServiceDevice):
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
         NetworkServiceDevice.__init__(self, device)
-        self.logger = logging.getLogger(u'Plugin.ServerDevice')
+        self.logger = logging.getLogger(u'Plugin.NetworkRelayDevice')
 
     #---------------------------------------------------------------------------
     # default behavior; subclasses should provide correct implementation
@@ -244,18 +243,18 @@ class ServerDevice(NetworkServiceDevice):
             device.updateStateOnServer('onOffState', 'off')
 
 ################################################################################
-class ServerDevice_SSH(ServerDevice):
+class NetworkRelayDevice_SSH(NetworkRelayDevice):
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
-        ServerDevice.__init__(self, device)
-        self.logger = logging.getLogger(u'Plugin.ServerDevice_SSH')
+        NetworkRelayDevice.__init__(self, device)
+        self.logger = logging.getLogger(u'Plugin.NetworkRelayDevice_SSH')
 
 ################################################################################
-class ServerDevice_Telnet(ServerDevice):
+class NetworkRelayDevice_Telnet(NetworkRelayDevice):
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
-        ServerDevice.__init__(self, device)
-        self.logger = logging.getLogger(u'Plugin.ServerDevice_Telnet')
+        NetworkRelayDevice.__init__(self, device)
+        self.logger = logging.getLogger(u'Plugin.NetworkRelayDevice_Telnet')
 
