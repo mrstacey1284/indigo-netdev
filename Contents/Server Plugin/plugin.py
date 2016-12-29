@@ -10,9 +10,7 @@ class Plugin(indigo.PluginBase):
     #---------------------------------------------------------------------------
     def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
         indigo.PluginBase.__init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs)
-
-        self._initializeLogging(pluginPrefs)
-
+        self._loadPluginPrefs(pluginPrefs)
         self.objects = dict()
 
     #---------------------------------------------------------------------------
@@ -31,7 +29,7 @@ class Plugin(indigo.PluginBase):
     #---------------------------------------------------------------------------
     def closedPrefsConfigUi(self, values, canceled):
         if canceled: return
-        self._initializeLogging(values)
+        self._loadPluginPrefs(values)
 
     #---------------------------------------------------------------------------
     def deviceStartComm(self, device):
@@ -75,15 +73,22 @@ class Plugin(indigo.PluginBase):
         self.logger.debug(u'Thread Stopped')
 
     #---------------------------------------------------------------------------
-    def _initializeLogging(self, values):
-        levelTxt = values.get('logLevel', None)
+    def _loadPluginPrefs(self, values):
+        logLevelTxt = values.get('logLevel', None)
 
-        if levelTxt is None:
+        if logLevelTxt is None:
             self.logLevel = 20
         else:
-            self.logLevel = int(levelTxt)
+            logLevel = int(logLevelTxt)
+            self.logLevel = logLevel
 
         self.indigo_log_handler.setLevel(self.logLevel)
+        self.logger.debug(u'pluginPrefs[logLevel] - %s', self.logLevel)
+
+        # socket connection timeout
+        timeout = int(values.get('connectionTimeout', '5'))
+        socket.setdefaulttimeout(timeout)
+        self.logger.debug(u'pluginPrefs[connectionTimeout] - %d sec', timeout)
 
     #---------------------------------------------------------------------------
     def _validatePrefs_Int(self, key, values, errors, min=None, max=None):
