@@ -3,6 +3,7 @@
 import logging
 import socket
 import telnetlib
+import subprocess
 
 ################################################################################
 class Plugin(indigo.PluginBase):
@@ -50,7 +51,7 @@ class Plugin(indigo.PluginBase):
             self.objects[device.id] = obj
 
         else:
-            self.logger.error('unknown device type: %s', typeId)
+            self.logger.error(u'unknown device type: %s', typeId)
 
     #---------------------------------------------------------------------------
     def deviceStopComm(self, device):
@@ -173,7 +174,7 @@ class NetworkServiceDevice():
     #---------------------------------------------------------------------------
     def __init__(self, device):
         # to emit Indigo events, logger must be a child of 'Plugin'
-        self.logger = logging.getLogger(u'Plugin.NetworkServiceDevice')
+        self.logger = logging.getLogger('Plugin.NetworkServiceDevice')
 
         self.address = device.pluginProps['address']
         self.port = int(device.pluginProps['port'])
@@ -187,14 +188,11 @@ class NetworkServiceDevice():
         device = self.device
 
         if self._hostIsReachable():
-            self.logger.debug('%s is AVAILABLE', device.name)
-
+            self.logger.debug(u'%s is AVAILABLE', device.name)
             device.updateStateOnServer('active', True)
             device.updateStateOnServer('status', 'Active')
-
         else:
-            self.logger.debug('%s is UNAVAILABLE', device.name)
-
+            self.logger.debug(u'%s is UNAVAILABLE', device.name)
             device.updateStateOnServer('active', False)
             device.updateStateOnServer('status', 'Inactive')
 
@@ -215,6 +213,20 @@ class NetworkServiceDevice():
 
         return ret
 
+    #---------------------------------------------------------------------------
+    # defined here as a convenience to subclasses
+    def _exec(self, *cmd):
+        self.logger.debug(u'=> exec%s', cmd)
+
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        pout, perr = proc.communicate()
+        self.logger.debug(u'=> exit(%d)', proc.returncode)
+
+        # TODO check perr
+        #self.logger.warn(perr)
+
+        return (proc.returncode == 0)
+
 ################################################################################
 # a network service that supports on / off state (relay device)
 class NetworkRelayDevice(NetworkServiceDevice):
@@ -222,17 +234,17 @@ class NetworkRelayDevice(NetworkServiceDevice):
     #---------------------------------------------------------------------------
     def __init__(self, device):
         NetworkServiceDevice.__init__(self, device)
-        self.logger = logging.getLogger(u'Plugin.NetworkRelayDevice')
+        self.logger = logging.getLogger('Plugin.NetworkRelayDevice')
 
     #---------------------------------------------------------------------------
     # default behavior; subclasses should provide correct implementation
     def turnOff(self):
-        self.logger.warn('Cannot turn off device: %s', self.device.name)
+        self.logger.warn(u'Cannot turn off device: %s', self.device.name)
 
     #---------------------------------------------------------------------------
     # default behavior; subclasses should provide correct implementation
     def turnOn(self):
-        self.logger.warn('Cannot turn on device: %s', self.device.name)
+        self.logger.warn(u'Cannot turn on device: %s', self.device.name)
 
     #---------------------------------------------------------------------------
     # basic check to see if the server is responding
@@ -240,11 +252,10 @@ class NetworkRelayDevice(NetworkServiceDevice):
         device = self.device
 
         if self._hostIsReachable():
-            self.logger.debug('%s is AVAILABLE', device.name)
+            self.logger.debug(u'%s is AVAILABLE', device.name)
             device.updateStateOnServer('onOffState', 'on')
-
         else:
-            self.logger.debug('%s is UNAVAILABLE', device.name)
+            self.logger.debug(u'%s is UNAVAILABLE', device.name)
             device.updateStateOnServer('onOffState', 'off')
 
 ################################################################################
@@ -253,7 +264,26 @@ class NetworkRelayDevice_SSH(NetworkRelayDevice):
     #---------------------------------------------------------------------------
     def __init__(self, device):
         NetworkRelayDevice.__init__(self, device)
-        self.logger = logging.getLogger(u'Plugin.NetworkRelayDevice_SSH')
+        self.logger = logging.getLogger('Plugin.NetworkRelayDevice_SSH')
+
+    #---------------------------------------------------------------------------
+    def updateStatus(self):
+        device = self.device
+
+        statusCmd = device.pluginProps.get('cmd_status', '/usr/bin/true')
+        self.logger.debug(u'check remote status: %s', statusCmd)
+
+        if self._rexec(statusCmd):
+            self.logger.debug(u'%s is AVAILABLE', device.name)
+            device.updateStateOnServer('onOffState', 'on')
+        else:
+            self.logger.debug(u'%s is UNAVAILABLE', device.name)
+            device.updateStateOnServer('onOffState', 'off')
+
+    #---------------------------------------------------------------------------
+    def _rexec(self, *cmd):
+        # TODO configure and run via SSH
+        return self._exec(*cmd)
 
 ################################################################################
 class NetworkRelayDevice_Telnet(NetworkRelayDevice):
@@ -261,5 +291,5 @@ class NetworkRelayDevice_Telnet(NetworkRelayDevice):
     #---------------------------------------------------------------------------
     def __init__(self, device):
         NetworkRelayDevice.__init__(self, device)
-        self.logger = logging.getLogger(u'Plugin.NetworkRelayDevice_Telnet')
+        self.logger = logging.getLogger('Plugin.NetworkRelayDevice_Telnet')
 

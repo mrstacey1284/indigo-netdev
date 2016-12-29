@@ -54,6 +54,13 @@
         <Label>Identify the prompt used for interactive shells.</Label>
       </Field>
 
+      <Field id="cmd_status" type="textfield" defaultValue="/usr/bin/true">
+        <Label>Status command</Label>
+      </Field>
+      <Field id="cmd_status_help" type="label" fontSize="mini" alignWithControl="true">
+        <Label>The command used to check status on the remote system.</Label>
+      </Field>
+
       <Field id="cmd_shutdown" type="textfield" defaultValue="shutdown now">
         <Label>Shutdown command</Label>
       </Field>
@@ -81,6 +88,15 @@
       <!-- create fields for authentication method (or None) -->
 
       <Field id="advConfigSep" type="separator" />
+
+      <!-- TODO check box for advanced config -->
+
+      <Field id="cmd_status" type="textfield" defaultValue="/usr/bin/true">
+        <Label>Status command</Label>
+      </Field>
+      <Field id="cmd_status_help" type="label" fontSize="mini" alignWithControl="true">
+        <Label>The command used to check status on the remote system.</Label>
+      </Field>
 
       <Field id="cmd_shutdown" type="textfield" defaultValue="/sbin/shutdown now">
         <Label>Shutdown command</Label>
