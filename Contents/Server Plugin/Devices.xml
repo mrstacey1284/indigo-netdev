@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+
 <Devices>
   <Device type="custom" id="service">
     <Name>Network Service</Name>
@@ -23,7 +24,7 @@
       <State id="status">
         <ValueType>String</ValueType>
         <TriggerLabel>Device Status Changes</TriggerLabel>
-        <ControlPageLabel>Device Status Changes</ControlPageLabel>
+        <ControlPageLabel>Device Status</ControlPageLabel>
       </State>
     </States>
 
