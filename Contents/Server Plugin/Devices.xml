@@ -45,9 +45,6 @@
       <!-- create fields for username and password (not required) -->
 
       <Field id="advConfigSep" type="separator" />
-      <Field id="advConfigLbl" type="label">
-        <Label>Advanced Configuration</Label>
-      </Field>
 
       <Field id="cmd_prompt" type="textfield" defaultValue="#">
         <Label>Command prompt</Label>
@@ -80,12 +77,11 @@
         <Label>SSH port</Label>
       </Field>
 
-      <Field id="advConfigSep" type="separator" />
-      <Field id="advConfigLbl" type="label">
-        <Label>Advanced Configuration</Label>
-      </Field>
+      <!-- create fields for authentication method (or None) -->
 
-      <Field id="cmd_shutdown" type="textfield" defaultValue="shutdown now">
+      <Field id="advConfigSep" type="separator" />
+
+      <Field id="cmd_shutdown" type="textfield" defaultValue="/sbin/shutdown now">
         <Label>Shutdown command</Label>
       </Field>
       <Field id="cmd_shutdown_help" type="label" fontSize="mini" alignWithControl="true">

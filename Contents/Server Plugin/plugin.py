@@ -11,7 +11,7 @@ class Plugin(indigo.PluginBase):
     def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
         indigo.PluginBase.__init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs)
 
-        self._initializeLogging(int(pluginPrefs.get('logLevel', '20')))
+        self._initializeLogging(pluginPrefs)
 
         self.objects = dict()
 
@@ -32,7 +32,7 @@ class Plugin(indigo.PluginBase):
     def closedPrefsConfigUi(self, values, canceled):
         if canceled: return
 
-        self._initializeLogging(int(values.get('logLevel', '20')))
+        self._initializeLogging(values)
 
     #---------------------------------------------------------------------------
     def deviceStartComm(self, device):
@@ -42,6 +42,14 @@ class Plugin(indigo.PluginBase):
 
         if typeId == 'service':
             obj = NetworkServiceDevice(device)
+            self.objects[device.id] = obj
+
+        elif typeId == 'ssh':
+            obj = ServerDevice_SSH(device)
+            self.objects[device.id] = obj
+
+        elif typeId == 'telnet':
+            obj = ServerDevice_Telnet(device)
             self.objects[device.id] = obj
 
         else:
@@ -68,6 +76,17 @@ class Plugin(indigo.PluginBase):
         self.logger.debug(u'Thread Stopped')
 
     #---------------------------------------------------------------------------
+    def _initializeLogging(self, values):
+        levelTxt = values.get('logLevel', None)
+
+        if levelTxt is None:
+            self.logLevel = 20
+        else:
+            self.logLevel = int(levelTxt)
+
+        self.indigo_log_handler.setLevel(self.logLevel)
+
+    #---------------------------------------------------------------------------
     def _validatePrefs_Int(self, key, values, errors, min=None, max=None):
         textVal = values.get(key, None)
         if textVal is None:
@@ -91,11 +110,6 @@ class Plugin(indigo.PluginBase):
             return False
 
         return True
-
-    #---------------------------------------------------------------------------
-    def _initializeLogging(self, level=20):
-        self.logLevel = level
-        self.indigo_log_handler.setLevel(level)
 
     #---------------------------------------------------------------------------
     def _runLoopStep(self):
@@ -167,21 +181,21 @@ class NetworkServiceDevice():
     def updateStatus(self):
         device = self.device
 
-        if self.hostIsReachable():
-            self.logger.debug(device.name + ' is AVAILABLE')
+        if self._hostIsReachable():
+            self.logger.debug('%s is AVAILABLE', device.name)
 
             device.updateStateOnServer('active', True)
             device.updateStateOnServer('status', 'Active')
 
         else:
-            self.logger.debug(device.name + ' is UNAVAILABLE')
+            self.logger.debug('%s is UNAVAILABLE', device.name)
 
             device.updateStateOnServer('active', False)
             device.updateStateOnServer('status', 'Inactive')
 
     #---------------------------------------------------------------------------
     # determine if the specific host is reachable
-    def hostIsReachable(self):
+    def _hostIsReachable(self):
         self.logger.debug('checking host - %s:%d', self.address, self.port)
 
         ret = None
@@ -195,4 +209,48 @@ class NetworkServiceDevice():
             ret = False
 
         return ret
+
+################################################################################
+class ServerDevice(NetworkServiceDevice):
+
+    #---------------------------------------------------------------------------
+    def __init__(self, device):
+        NetworkServiceDevice.__init__(self, device)
+        self.logger = logging.getLogger(u'Plugin.ServerDevice')
+
+    #---------------------------------------------------------------------------
+    def turnOff(self):
+        self.logger.warn('Cannot turn off device: %s', self.device.name)
+
+    #---------------------------------------------------------------------------
+    def turnOn(self):
+        self.logger.warn('Cannot turn on device: %s', self.device.name)
+
+    #---------------------------------------------------------------------------
+    def updateStatus(self):
+        device = self.device
+
+        if self._hostIsReachable():
+            self.logger.debug('%s is AVAILABLE', device.name)
+            device.updateStateOnServer('onOffState', 'on')
+
+        else:
+            self.logger.debug('%s is UNAVAILABLE', device.name)
+            device.updateStateOnServer('onOffState', 'off')
+
+################################################################################
+class ServerDevice_SSH(ServerDevice):
+
+    #---------------------------------------------------------------------------
+    def __init__(self, device):
+        ServerDevice.__init__(self, device)
+        self.logger = logging.getLogger(u'Plugin.ServerDevice_SSH')
+
+################################################################################
+class ServerDevice_Telnet(ServerDevice):
+
+    #---------------------------------------------------------------------------
+    def __init__(self, device):
+        ServerDevice.__init__(self, device)
+        self.logger = logging.getLogger(u'Plugin.ServerDevice_Telnet')
 
