@@ -285,15 +285,16 @@ class NetworkRelayDevice_SSH(NetworkRelayDevice):
     def _rexec(self, *cmd):
         device = self.device
 
-        host = device.pluginProps.get('address', None)
         port = device.pluginProps.get('port', '22')
-
         rcmd = ['ssh', '-p', port]
 
         username = device.pluginProps.get('username', None)
-        if username is not None: rcmd.extend(('-l', username))
+        if username is not None:
+            rcmd.extend(('-l', username))
 
+        host = device.pluginProps.get('address', None)
         rcmd.append(host)
+
         rcmd.extend(cmd)
 
         return self._exec(*rcmd)

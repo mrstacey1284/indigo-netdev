@@ -77,16 +77,22 @@
     <Name>SSH Server</Name>
 
     <ConfigUI>
+      <Field id="overview" type="label">
+        <Label>For security reasons, SSH devices must use a keypair to authenticate with the remote server.  The keypair must be accessible by the local user running the Indigo server.</Label>
+      </Field>
+
       <Field id="address" type="textfield">
         <Label>IP address or hostname</Label>
       </Field>
 
       <Field id="port" type="textfield" defaultValue="22">
         <Label>SSH port</Label>
+        <Description>The SSH port on the remote server.</Description>
       </Field>
 
       <Field id="username" type="textfield">
         <Label>Username</Label>
+        <Description>Attempt to log in using the provided username.</Description>
       </Field>
 
       <!-- XXX maybe keypair is best rather than supporting multiple methods?
@@ -99,7 +105,7 @@
         </List>
       </Field>
 
-      <Field id="password" type="textfield"
+      <Field id="password" type="textfield" secure="true"
        visibleBindingId="authType" visibleBindingValue="passwd">
         <Label>Password</Label>
       </Field>
