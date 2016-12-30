@@ -249,9 +249,14 @@ class NetworkRelayDevice(NetworkServiceDevice):
     #---------------------------------------------------------------------------
     # basic check to see if the server is responding
     def updateStatus(self):
+        status = self._hostIsReachable()
+        self._setDeviceStatus(status)
+
+    #---------------------------------------------------------------------------
+    def _setDeviceStatus(self, deviceIsAvailable):
         device = self.device
 
-        if self._hostIsReachable():
+        if deviceIsAvailable:
             self.logger.debug(u'%s is AVAILABLE', device.name)
             device.updateStateOnServer('onOffState', 'on')
         else:
@@ -270,20 +275,28 @@ class NetworkRelayDevice_SSH(NetworkRelayDevice):
     def updateStatus(self):
         device = self.device
 
-        statusCmd = device.pluginProps.get('cmd_status', '/usr/bin/true')
-        self.logger.debug(u'check remote status: %s', statusCmd)
+        statusCmd = device.pluginProps.get('cmd_status', '/bin/true')
+        self.logger.debug(u'checking remote status: %s', statusCmd)
 
-        if self._rexec(statusCmd):
-            self.logger.debug(u'%s is AVAILABLE', device.name)
-            device.updateStateOnServer('onOffState', 'on')
-        else:
-            self.logger.debug(u'%s is UNAVAILABLE', device.name)
-            device.updateStateOnServer('onOffState', 'off')
+        status = self._rexec(statusCmd)
+        self._setDeviceStatus(status)
 
     #---------------------------------------------------------------------------
     def _rexec(self, *cmd):
-        # TODO configure and run via SSH
-        return self._exec(*cmd)
+        device = self.device
+
+        host = device.pluginProps.get('address', None)
+        port = device.pluginProps.get('port', '22')
+
+        rcmd = ['ssh', '-p', port]
+
+        username = device.pluginProps.get('username', None)
+        if username is not None: rcmd.extend(('-l', username))
+
+        rcmd.append(host)
+        rcmd.extend(cmd)
+
+        return self._exec(*rcmd)
 
 ################################################################################
 class NetworkRelayDevice_Telnet(NetworkRelayDevice):

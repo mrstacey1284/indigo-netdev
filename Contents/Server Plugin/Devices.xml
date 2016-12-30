@@ -54,7 +54,7 @@
         <Label>Identify the prompt used for interactive shells.</Label>
       </Field>
 
-      <Field id="cmd_status" type="textfield" defaultValue="/usr/bin/true">
+      <Field id="cmd_status" type="textfield" defaultValue="/bin/true">
         <Label>Status command</Label>
       </Field>
       <Field id="cmd_status_help" type="label" fontSize="mini" alignWithControl="true">
@@ -85,24 +85,41 @@
         <Label>SSH port</Label>
       </Field>
 
-      <!-- create fields for authentication method (or None) -->
+      <Field id="username" type="textfield">
+        <Label>Username</Label>
+      </Field>
+
+      <!-- XXX maybe keypair is best rather than supporting multiple methods?
+      <Field type="menu" id="authType" defaultValue="none">
+        <Label>Authentication Method</Label>
+        <List>
+          <Option value="none">None</Option>
+          <Option value="passwd">Password</Option>
+          <Option value="key">Key Exchange</Option>
+        </List>
+      </Field>
+
+      <Field id="password" type="textfield"
+       visibleBindingId="authType" visibleBindingValue="passwd">
+        <Label>Password</Label>
+      </Field>
+      -->
 
       <Field id="advConfigSep" type="separator" />
+      <Field type="checkbox" id="advConfig" defaultValue="false">
+        <Label>Advanced Configuration</Label>
+      </Field>
 
-      <!-- TODO check box for advanced config -->
-
-      <Field id="cmd_status" type="textfield" defaultValue="/usr/bin/true">
+      <Field id="cmd_status" type="textfield" defaultValue="/bin/true"
+       visibleBindingId="advConfig" visibleBindingValue="true">
         <Label>Status command</Label>
-      </Field>
-      <Field id="cmd_status_help" type="label" fontSize="mini" alignWithControl="true">
-        <Label>The command used to check status on the remote system.</Label>
+        <Description>The command used to check status on the remote system.</Description>
       </Field>
 
-      <Field id="cmd_shutdown" type="textfield" defaultValue="/sbin/shutdown now">
+      <Field id="cmd_shutdown" type="textfield" defaultValue="/sbin/shutdown now"
+       visibleBindingId="advConfig" visibleBindingValue="true">
         <Label>Shutdown command</Label>
-      </Field>
-      <Field id="cmd_shutdown_help" type="label" fontSize="mini" alignWithControl="true">
-        <Label>The command used to "turn off" the system from the command line.</Label>
+        <Description>The command used to "turn off" the system from the command line.</Description>
       </Field>
     </ConfigUI>
 
