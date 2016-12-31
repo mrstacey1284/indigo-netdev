@@ -8,6 +8,45 @@ import subprocess
 import threading
 
 ################################################################################
+def validateConfig_String(key, values, errors, emptyOk=False):
+    textVal = values.get(key, None)
+
+    if textVal is None:
+        errors[key] = '%s cannot be empty' % key
+        return False
+
+    if not emptyOk and len(textVal) == 0:
+        errors[key] = '%s cannot be blank' % key
+        return False
+
+    return True
+
+################################################################################
+def validateConfig_Int(key, values, errors, min=None, max=None):
+    textVal = values.get(key, None)
+    if textVal is None:
+        errors[key] = '%s is required' % key
+        return False
+
+    intVal = None
+
+    try:
+        intVal = int(textVal)
+    except:
+        errors[key] = '%s must be an integer' % key
+        return False
+
+    if min is not None and intVal < min:
+        errors[key] = '%s must be greater than or equal to %d' % (key, min)
+        return False
+
+    if max is not None and intVal > max:
+        errors[key] = '%s must be less than or equal to %d' % (key, max)
+        return False
+
+    return True
+
+################################################################################
 class Plugin(indigo.PluginBase):
 
     #---------------------------------------------------------------------------
@@ -24,8 +63,20 @@ class Plugin(indigo.PluginBase):
     def validatePrefsConfigUi(self, values):
         errors = indigo.Dict()
 
-        self._validatePrefs_Int('refreshInterval', values, errors, min=1, max=3600)
-        self._validatePrefs_Int('connectionTimeout', values, errors, min=0, max=300)
+        validateConfig_Int('refreshInterval', values, errors, min=1, max=3600)
+        validateConfig_Int('connectionTimeout', values, errors, min=0, max=300)
+
+        return ((len(errors) == 0), values, errors)
+
+    #---------------------------------------------------------------------------
+    def validateDeviceConfigUi(self, values, typeId, devId):
+        errors = indigo.Dict()
+
+        if typeId == 'service':
+            NetworkServiceDevice.validateConfig(values, errors)
+
+        elif typeId == 'ssh':
+            NetworkRelayDevice_SSH.validateConfig(values, errors)
 
         return ((len(errors) == 0), values, errors)
 
@@ -98,31 +149,6 @@ class Plugin(indigo.PluginBase):
         self.logger.debug(u'pluginPrefs[connectionTimeout] - %d sec', timeout)
 
     #---------------------------------------------------------------------------
-    def _validatePrefs_Int(self, key, values, errors, min=None, max=None):
-        textVal = values.get(key, None)
-        if textVal is None:
-            errors[key] = '%s is required' % key
-            return False
-
-        intVal = None
-
-        try:
-            intVal = int(textVal)
-        except:
-            errors[key] = '%s must be an integer' % key
-            return False
-
-        if min is not None and intVal < min:
-            errors[key] = '%s must be greater than %d' % (key, min)
-            return False
-
-        if max is not None and intVal > max:
-            errors[key] = '%s must be less than %d' % (key, max)
-            return False
-
-        return True
-
-    #---------------------------------------------------------------------------
     def _runLoopStep(self):
         # update all enabled and configured devices
         for id in self.objects:
@@ -189,6 +215,12 @@ class NetworkServiceDevice():
         self.execLock = threading.Lock()
 
     #---------------------------------------------------------------------------
+    @staticmethod
+    def validateConfig(values, errors):
+        validateConfig_String('address', values, errors, emptyOk=False)
+        validateConfig_Int('port', values, errors, min=1, max=65536)
+
+    #---------------------------------------------------------------------------
     # sub-classes should override this for their specific device states
     def updateStatus(self):
         device = self.device
@@ -245,6 +277,13 @@ class NetworkRelayDevice(NetworkServiceDevice):
         self.logger = logging.getLogger('Plugin.NetworkRelayDevice')
 
     #---------------------------------------------------------------------------
+    @staticmethod
+    def validateConfig(values, errors):
+        NetworkServiceDevice.validateConfig(values, errors)
+        validateConfig_String('cmd_status', values, errors, emptyOk=False)
+        validateConfig_String('cmd_shutdown', values, errors, emptyOk=False)
+
+    #---------------------------------------------------------------------------
     # default behavior; subclasses should provide correct implementation
     def turnOff(self):
         self.logger.warn(u'Not supported - Turn Off %s', self.device.name)
@@ -283,7 +322,7 @@ class NetworkRelayDevice_SSH(NetworkRelayDevice):
     def updateStatus(self):
         device = self.device
 
-        statusCmd = device.pluginProps.get('cmd_status', '/bin/true')
+        statusCmd = device.pluginProps['cmd_status']
         self.logger.debug(u'checking remote status: %s', statusCmd)
 
         # execute the command and update status
@@ -295,7 +334,7 @@ class NetworkRelayDevice_SSH(NetworkRelayDevice):
     def turnOff(self):
         device = self.device
 
-        shutdownCmd = device.pluginProps.get('cmd_shutdown', '/sbin/shutdown -h now')
+        shutdownCmd = device.pluginProps['cmd_shutdown']
         self.logger.info(u'Shutting down %s', device.name)
         self.logger.debug(u'=> %s', shutdownCmd)
 
