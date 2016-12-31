@@ -132,19 +132,15 @@ class Plugin(indigo.PluginBase):
 
     #---------------------------------------------------------------------------
     def _loadPluginPrefs(self, values):
-        logLevelTxt = values.get('logLevel', None)
-
-        if logLevelTxt is None:
-            self.logLevel = 20
-        else:
-            logLevel = int(logLevelTxt)
-            self.logLevel = logLevel
+        # setup logging system
+        logLevel = int(values['logLevel'])
+        self.logLevel = logLevel
 
         self.indigo_log_handler.setLevel(self.logLevel)
         self.logger.debug(u'pluginPrefs[logLevel] - %s', self.logLevel)
 
         # socket connection timeout
-        timeout = int(values.get('connectionTimeout', '5'))
+        timeout = int(values['connectionTimeout'])
         socket.setdefaulttimeout(timeout)
         self.logger.debug(u'pluginPrefs[connectionTimeout] - %d sec', timeout)
 
@@ -156,7 +152,7 @@ class Plugin(indigo.PluginBase):
             obj.updateStatus()
 
         # sleep for the configured timeout
-        refreshInterval = int(self.pluginPrefs.get('refreshInterval', 60))
+        refreshInterval = int(self.pluginPrefs['refreshInterval'])
         self.logger.debug(u'Next update in %d seconds', refreshInterval)
         self.sleep(refreshInterval)
 
@@ -349,16 +345,25 @@ class NetworkRelayDevice_SSH(NetworkRelayDevice):
     def _rexec(self, *cmd):
         device = self.device
 
-        port = device.pluginProps.get('port', '22')
-        rcmd = ['ssh', '-p', port]
+        # setup the remote command to run using ssh
+        # XXX -f would be ideal, but we lose the return code of the remote command
+        rcmd = ['ssh', '-anTxq', '-p']
+        rcmd.append(device.pluginProps['port'])
 
+        # TODO support global timeout
+        #rcmd.append('-o', 'ConnectTimeout=%d' % connectionTimeout)
+
+        # username is optional for SSH commands...
         username = device.pluginProps.get('username', None)
-        if username is not None:
+        if username is not None and len(username) > 0:
+            self.logger.debug(u'running as remote user: %s', username)
             rcmd.extend(('-l', username))
+        else:
+            # TODO capture local username in debug log
+            self.logger.debug(u'running as local user')
 
-        host = device.pluginProps.get('address', None)
-        rcmd.append(host)
-
+        # add the host and commands supplied by caller
+        rcmd.append(device.pluginProps['address'])
         rcmd.extend(cmd)
 
         return self._exec(*rcmd)
