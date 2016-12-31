@@ -345,12 +345,11 @@ class NetworkRelayDevice_SSH(NetworkRelayDevice):
     def _rexec(self, *cmd):
         device = self.device
 
-        # setup the remote command to run using ssh
+        # setup the remote command using a safe ssh config
         # XXX -f would be ideal, but we lose the return code of the remote command
-        rcmd = ['ssh', '-anTxq', '-p']
-        rcmd.append(device.pluginProps['port'])
+        rcmd = ['ssh', '-anTxq']
 
-        # TODO support global timeout
+        # TODO support global timeout, e.g.
         #rcmd.append('-o', 'ConnectTimeout=%d' % connectionTimeout)
 
         # username is optional for SSH commands...
@@ -362,8 +361,11 @@ class NetworkRelayDevice_SSH(NetworkRelayDevice):
             # TODO capture local username in debug log
             self.logger.debug(u'running as local user')
 
-        # add the host and commands supplied by caller
+        # add the host and port
+        rcmd.extend(('-p', device.pluginProps['port']))
         rcmd.append(device.pluginProps['address'])
+
+        # add all commands supplied by caller
         rcmd.extend(cmd)
 
         return self._exec(*rcmd)
