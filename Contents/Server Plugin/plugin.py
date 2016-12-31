@@ -247,12 +247,12 @@ class NetworkRelayDevice(NetworkServiceDevice):
     #---------------------------------------------------------------------------
     # default behavior; subclasses should provide correct implementation
     def turnOff(self):
-        self.logger.warn(u'Cannot turn off device: %s', self.device.name)
+        self.logger.warn(u'Not supported - Turn Off %s', self.device.name)
 
     #---------------------------------------------------------------------------
     # default behavior; subclasses should provide correct implementation
     def turnOn(self):
-        self.logger.warn(u'Cannot turn on device: %s', self.device.name)
+        self.logger.warn(u'Not supported - Turn On %s', self.device.name)
 
     #---------------------------------------------------------------------------
     # basic check to see if the server is responding
