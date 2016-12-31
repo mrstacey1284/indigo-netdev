@@ -1,46 +1,32 @@
 <?xml version="1.0"?>
 
 <PluginConfig>
-  <Field id="info001" type="label">
-    <Label>Plugin must be reloaded for changes to take effect.</Label>
+
+  <Field type="textfield" id="refreshInterval" defaultValue="60">
+    <Label>Refresh interval (seconds):</Label>
+  </Field>
+  <Field id="refreshIntervalHelp" type="label" fontSize="mini" alignWithControl="true">
+    <Label>How often devices will be polled for status (1-3600)</Label>
   </Field>
 
-	<Field type="textfield" id="refreshInterval" defaultValue="60">
-		<Label>Refresh interval (seconds):</Label>
-	</Field>
+  <Field type="textfield" id="connectionTimeout" defaultValue="5">
+    <Label>Connection timeout (seconds):</Label>
+  </Field>
+  <Field id="connectionTimeoutHelp" type="label" fontSize="mini" alignWithControl="true">
+    <Label>Timeout for network connection attempts (1-300)</Label>
+  </Field>
 
-	<Field type="textfield" id="connectionTimeout" defaultValue="5">
-		<Label>Connection timeout (seconds):</Label>
-	</Field>
+  <Field id="advConfigSep" type="separator" />
 
-	<Field type="textfield" id="retryCount" defaultValue="5">
-		<Label>'Inactive' retry count:</Label>
-	</Field>
+  <Field id="logLevel" type="menu" defaultValue="20">
+    <Label>Event Logging Level:</Label>
+    <List>
+      <Option value="10">Debugging Messages</Option>
+      <Option value="20">Informational Messages</Option>
+      <Option value="30">Warning Messages</Option>
+      <Option value="40">Error Messages</Option>
+      <Option value="50">Critical Errors Only</Option>
+    </List>
+  </Field>
 
-  <Field id="separator001" type="separator" />
-
-	<Field type="textfield" id="routerAddr" defaultValue="192.168.0.1">
-		<Label>Router IP address:</Label>
-	</Field>
-
-	<Field type="textfield" id="routerUser" defaultValue="admin">
-		<Label>Router username:</Label>
-	</Field>
-
-  <!--
-	<Field type="textfield" id="routerPasswd" defaultValue="admin">
-		<Label>Router password:</Label>
-	</Field>
-  -->
-
-  <Field type="textfield" id="routerArpTable" defaultValue="cat /proc/net/arp">
-		<Label>Router ARP table:</Label>
-	</Field>
-
-  <Field id="separator002" type="separator" />
-
-	<Field type="checkbox" id="debug">
-		<Label>Enable debugging:</Label>
-	</Field>
 </PluginConfig>
-

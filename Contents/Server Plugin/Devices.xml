@@ -1,39 +1,10 @@
 <?xml version="1.0"?>
+
 <Devices>
-  <Device type="custom" id="mac_addr">
-    <Name>Ethernet Device</Name>
 
-    <ConfigUI>
-      <Field id="address" type="textfield">
-        <Label>Hardware Address</Label>
-      </Field>
-    </ConfigUI>
-
-    <States>
-      <State id="active">
-        <ValueType>Boolean</ValueType>
-        <TriggerLabel>Device is Active</TriggerLabel>
-        <ControlPageLabel>Device is Active</ControlPageLabel>
-      </State>
-
-      <State id="status">
-        <ValueType>String</ValueType>
-        <TriggerLabel>Device Status Changes</TriggerLabel>
-        <ControlPageLabel>Device Status Changes</ControlPageLabel>
-      </State>
-
-      <State id="lastSeenAt">
-        <ValueType>String</ValueType>
-        <TriggerLabel>Device Last Seen</TriggerLabel>
-        <ControlPageLabel>Device Last Seen</ControlPageLabel>
-      </State>
-    </States>
-
-    <UiDisplayStateId>status</UiDisplayStateId>
-  </Device>
-
-  <Device type="custom" id="hostname">
-    <Name>Internet Device</Name>
+  <!-- ======================================================== -->
+  <Device type="custom" id="service">
+    <Name>Network Service</Name>
 
     <ConfigUI>
       <Field id="address" type="textfield">
@@ -55,15 +26,16 @@
       <State id="status">
         <ValueType>String</ValueType>
         <TriggerLabel>Device Status Changes</TriggerLabel>
-        <ControlPageLabel>Device Status Changes</ControlPageLabel>
+        <ControlPageLabel>Device Status</ControlPageLabel>
       </State>
     </States>
 
     <UiDisplayStateId>status</UiDisplayStateId>
   </Device>
 
+  <!-- ========================================================
   <Device type="relay" id="telnet">
-    <Name>Telnet Device</Name>
+    <Name>Telnet Server</Name>
 
     <ConfigUI>
       <Field id="address" type="textfield">
@@ -74,29 +46,115 @@
         <Label>Telnet port</Label>
       </Field>
 
+      <Field id="advConfigSep" type="separator" />
+
       <Field id="cmd_prompt" type="textfield" defaultValue="#">
         <Label>Command prompt</Label>
+      </Field>
+      <Field id="cmd_prompt_help" type="label" fontSize="mini" alignWithControl="true">
+        <Label>Identify the prompt used for interactive shells.</Label>
+      </Field>
+
+      <Field id="cmd_status" type="textfield" defaultValue="/bin/true">
+        <Label>Status command</Label>
+      </Field>
+      <Field id="cmd_status_help" type="label" fontSize="mini" alignWithControl="true">
+        <Label>The command used to check status on the remote system.</Label>
+      </Field>
+
+      <Field id="cmd_shutdown" type="textfield" defaultValue="shutdown now">
+        <Label>Shutdown command</Label>
+      </Field>
+      <Field id="cmd_shutdown_help" type="label" fontSize="mini" alignWithControl="true">
+        <Label>The command used to "turn off" the system from the command line.</Label>
       </Field>
     </ConfigUI>
 
     <States>
     </States>
   </Device>
+  -->
 
+  <!-- ======================================================== -->
   <Device type="relay" id="ssh">
-    <Name>SSH Device</Name>
+    <Name>SSH Server</Name>
 
     <ConfigUI>
+      <Field id="overview" type="label">
+        <Label>For security reasons, SSH devices must use a keypair to authenticate with the remote server.  See the README for more information.</Label>
+      </Field>
+
       <Field id="address" type="textfield">
         <Label>IP address or hostname</Label>
       </Field>
 
       <Field id="port" type="textfield" defaultValue="22">
         <Label>SSH port</Label>
+        <Description>The SSH port on the remote server.</Description>
+      </Field>
+
+      <Field id="username" type="textfield">
+        <Label>Username</Label>
+        <Description>Attempt to log in using the provided username.</Description>
+      </Field>
+
+      <!-- XXX maybe keypair is best rather than supporting multiple methods?
+      <Field type="menu" id="authType" defaultValue="none">
+        <Label>Authentication Method</Label>
+        <List>
+          <Option value="none">None</Option>
+          <Option value="passwd">Password</Option>
+          <Option value="key">Key Exchange</Option>
+        </List>
+      </Field>
+
+      <Field id="password" type="textfield" secure="true"
+       visibleBindingId="authType" visibleBindingValue="passwd">
+        <Label>Password</Label>
+      </Field>
+      -->
+
+      <Field id="advConfigSep" type="separator" />
+      <Field type="checkbox" id="advConfig" defaultValue="false">
+        <Label>Advanced Configuration</Label>
+      </Field>
+
+      <Field id="cmd_status" type="textfield" defaultValue="/bin/true"
+       visibleBindingId="advConfig" visibleBindingValue="true">
+        <Label>Status command</Label>
+        <Description>The command used to check status on the remote system.</Description>
+      </Field>
+
+      <Field id="cmd_shutdown" type="textfield" defaultValue="/sbin/shutdown now"
+       visibleBindingId="advConfig" visibleBindingValue="true">
+        <Label>Shutdown command</Label>
+        <Description>The command used to "turn off" the system from the command line.</Description>
       </Field>
     </ConfigUI>
-
-    <States>
-    </States>
   </Device>
+
+  <!-- ========================================================
+  <Device type="relay" id="macos">
+    <Name>macOS Server</Name>
+
+    <ConfigUI>
+      <Field id="overview" type="label">
+        <Label>To support a macOS server, Remote Login must be enabled under System Preferences. See the README for more information.</Label>
+      </Field>
+
+      <Field id="address" type="textfield">
+        <Label>IP address or hostname</Label>
+      </Field>
+
+      <Field id="username" type="textfield">
+        <Label>Username</Label>
+      </Field>
+
+      <Field id="password" type="textfield" secure="true">
+        <Label>Password</Label>
+      </Field>
+    </ConfigUI>
+  </Device>
+  -->
+
 </Devices>
