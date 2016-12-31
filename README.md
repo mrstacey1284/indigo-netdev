@@ -60,6 +60,11 @@ the device configuration allows the user to set a specific command to safely shu
 if running on the command line.  Some devices, such as routers or other embedded linux
 servers, use the `poweroff` command rather than `shutdown`.
 
+The "Username" property will be passed to the SSH client to authenticate on the remote
+system.  If this is left blank, the Indigo server user will be used.  For most applications,
+this value will be set to the super user account (e.g. "root") to enable shutting down the
+system from the command line.
+
 *NOTE* once turned off, these devices must be turned on at the system.
 
 ### Telnet Server
