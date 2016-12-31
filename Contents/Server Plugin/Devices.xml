@@ -62,7 +62,7 @@
         <Label>The command used to check status on the remote system.</Label>
       </Field>
 
-      <Field id="cmd_shutdown" type="textfield" defaultValue="shutdown now">
+      <Field id="cmd_shutdown" type="textfield" defaultValue="shutdown -h now">
         <Label>Shutdown command</Label>
       </Field>
       <Field id="cmd_shutdown_help" type="label" fontSize="mini" alignWithControl="true">
@@ -125,7 +125,7 @@
         <Description>The command used to check status on the remote system.</Description>
       </Field>
 
-      <Field id="cmd_shutdown" type="textfield" defaultValue="/sbin/shutdown now"
+      <Field id="cmd_shutdown" type="textfield" defaultValue="/sbin/shutdown -h now"
        visibleBindingId="advConfig" visibleBindingValue="true">
         <Label>Shutdown command</Label>
         <Description>The command used to "turn off" the system from the command line.</Description>
