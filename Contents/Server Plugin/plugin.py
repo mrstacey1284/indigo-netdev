@@ -118,15 +118,15 @@ class Plugin(indigo.PluginBase):
 
     #---------------------------------------------------------------------------
     def _runLoopStep(self):
-        # devices are updated when comms start, so we'll start with a sleep
-        refreshInterval = int(self.pluginPrefs.get('refreshInterval', 60))
-        self.logger.debug(u'Next update in %d seconds', refreshInterval)
-        self.sleep(refreshInterval)
-
         # update all enabled and configured devices
         for id in self.objects:
             obj = self.objects[id]
             obj.updateStatus()
+
+        # sleep for the configured timeout
+        refreshInterval = int(self.pluginPrefs.get('refreshInterval', 60))
+        self.logger.debug(u'Next update in %d seconds', refreshInterval)
+        self.sleep(refreshInterval)
 
     #---------------------------------------------------------------------------
     # Relay / Dimmer Action callback
@@ -180,7 +180,6 @@ class NetworkServiceDevice():
         self.port = int(device.pluginProps['port'])
 
         self.device = device
-        self.updateStatus()
 
     #---------------------------------------------------------------------------
     # sub-classes should override this for their specific device states
