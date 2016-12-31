@@ -1,9 +1,11 @@
 #! /usr/bin/env python
 
 import logging
+import shlex
 import socket
 import telnetlib
 import subprocess
+import threading
 
 ################################################################################
 class Plugin(indigo.PluginBase):
@@ -48,6 +50,10 @@ class Plugin(indigo.PluginBase):
 
         elif typeId == 'telnet':
             obj = NetworkRelayDevice_Telnet(device)
+            self.objects[device.id] = obj
+
+        elif typeId == 'macos':
+            obj = NetworkRelayDevice_macOS(device)
             self.objects[device.id] = obj
 
         else:
@@ -180,6 +186,7 @@ class NetworkServiceDevice():
         self.port = int(device.pluginProps['port'])
 
         self.device = device
+        self.execLock = threading.Lock()
 
     #---------------------------------------------------------------------------
     # sub-classes should override this for their specific device states
@@ -215,6 +222,7 @@ class NetworkServiceDevice():
     #---------------------------------------------------------------------------
     # defined here as a convenience to subclasses
     def _exec(self, *cmd):
+        self.execLock.acquire()
         self.logger.debug(u'=> exec%s', cmd)
 
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -224,6 +232,7 @@ class NetworkServiceDevice():
         # TODO check perr
         #self.logger.warn(perr)
 
+        self.execLock.release()
         return (proc.returncode == 0)
 
 ################################################################################
@@ -277,8 +286,25 @@ class NetworkRelayDevice_SSH(NetworkRelayDevice):
         statusCmd = device.pluginProps.get('cmd_status', '/bin/true')
         self.logger.debug(u'checking remote status: %s', statusCmd)
 
-        status = self._rexec(statusCmd)
+        # execute the command and update status
+        cmd = shlex.split(statusCmd)
+        status = self._rexec(*cmd)
         self._setDeviceStatus(status)
+
+    #---------------------------------------------------------------------------
+    def turnOff(self):
+        device = self.device
+
+        shutdownCmd = device.pluginProps.get('cmd_shutdown', '/sbin/shutdown -h now')
+        self.logger.info(u'Shutting down %s', device.name)
+        self.logger.debug(u'=> %s', shutdownCmd)
+
+        # execute the command remotely
+        cmd = shlex.split(shutdownCmd)
+        status = self._rexec(*cmd)
+
+        if status is False:
+            self.logger.error(u'Could not turn off remote server: %s', device.name)
 
     #---------------------------------------------------------------------------
     def _rexec(self, *cmd):
@@ -305,4 +331,21 @@ class NetworkRelayDevice_Telnet(NetworkRelayDevice):
     def __init__(self, device):
         NetworkRelayDevice.__init__(self, device)
         self.logger = logging.getLogger('Plugin.NetworkRelayDevice_Telnet')
+
+################################################################################
+class NetworkRelayDevice_macOS(NetworkRelayDevice_SSH):
+
+    # XXX could we use remote management instead of SSH?
+
+    #---------------------------------------------------------------------------
+    def __init__(self, device):
+        # configure known properties for mac servers - FIXME doesn't work
+        device.pluginProps['port'] = '22'
+        device.pluginProps['cmd_status'] = '/usr/bin/true'
+        device.pluginProps['cmd_shutdown'] = '/sbin/shutdown -h now'
+
+        # TODO how to handle password authentication?
+
+        NetworkRelayDevice_SSH.__init__(self, device)
+        self.logger = logging.getLogger('Plugin.NetworkRelayDevice_macOS')
 

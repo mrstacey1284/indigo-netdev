@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 
 <Devices>
+
+  <!-- ======================================================== -->
   <Device type="custom" id="service">
     <Name>Network Service</Name>
 
@@ -31,6 +33,7 @@
     <UiDisplayStateId>status</UiDisplayStateId>
   </Device>
 
+  <!-- ========================================================
   <Device type="relay" id="telnet">
     <Name>Telnet Server</Name>
 
@@ -42,8 +45,6 @@
       <Field id="port" type="textfield" defaultValue="23">
         <Label>Telnet port</Label>
       </Field>
-
-      <!-- create fields for username and password (not required) -->
 
       <Field id="advConfigSep" type="separator" />
 
@@ -72,13 +73,15 @@
     <States>
     </States>
   </Device>
+  -->
 
+  <!-- ======================================================== -->
   <Device type="relay" id="ssh">
     <Name>SSH Server</Name>
 
     <ConfigUI>
       <Field id="overview" type="label">
-        <Label>For security reasons, SSH devices must use a keypair to authenticate with the remote server.  The keypair must be accessible by the local user running the Indigo server.</Label>
+        <Label>For security reasons, SSH devices must use a keypair to authenticate with the remote server.  See the README for more information.</Label>
       </Field>
 
       <Field id="address" type="textfield">
@@ -128,8 +131,30 @@
         <Description>The command used to "turn off" the system from the command line.</Description>
       </Field>
     </ConfigUI>
-
-    <States>
-    </States>
   </Device>
+
+  <!-- ========================================================
+  <Device type="relay" id="macos">
+    <Name>macOS Server</Name>
+
+    <ConfigUI>
+      <Field id="overview" type="label">
+        <Label>To support a macOS server, Remote Login must be enabled under System Preferences. See the README for more information.</Label>
+      </Field>
+
+      <Field id="address" type="textfield">
+        <Label>IP address or hostname</Label>
+      </Field>
+
+      <Field id="username" type="textfield">
+        <Label>Username</Label>
+      </Field>
+
+      <Field id="password" type="textfield" secure="true">
+        <Label>Password</Label>
+      </Field>
+    </ConfigUI>
+  </Device>
+  -->
+
 </Devices>
