@@ -87,6 +87,7 @@ class SSHClient(ServiceClient):
     def turnOff(self):
         shutdownCmd = self.commands.get('shutdown', None)
         self.logger.debug(u'=> %s', shutdownCmd)
+        if shutdownCmd is None: return False
 
         # execute the command remotely
         cmd = shlex.split(shutdownCmd)
