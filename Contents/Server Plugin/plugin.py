@@ -1,11 +1,9 @@
 #! /usr/bin/env python
 
 import logging
-import shlex
 import socket
-import telnetlib
-import subprocess
-import threading
+
+import clients
 
 ################################################################################
 def validateConfig_String(key, values, errors, emptyOk=False):
@@ -204,11 +202,11 @@ class NetworkServiceDevice():
         # to emit Indigo events, logger must be a child of 'Plugin'
         self.logger = logging.getLogger('Plugin.NetworkServiceDevice')
 
-        self.address = device.pluginProps['address']
-        self.port = int(device.pluginProps['port'])
+        address = device.pluginProps['address']
+        port = int(device.pluginProps['port'])
+        self.client = clients.ServiceClient(address, port)
 
         self.device = device
-        self.execLock = threading.Lock()
 
     #---------------------------------------------------------------------------
     @staticmethod
@@ -221,7 +219,7 @@ class NetworkServiceDevice():
     def updateStatus(self):
         device = self.device
 
-        if self._hostIsReachable():
+        if self.client.isAvailable():
             self.logger.debug(u'%s is AVAILABLE', device.name)
             device.updateStateOnServer('active', True)
             device.updateStateOnServer('status', 'Active')
@@ -229,39 +227,6 @@ class NetworkServiceDevice():
             self.logger.debug(u'%s is UNAVAILABLE', device.name)
             device.updateStateOnServer('active', False)
             device.updateStateOnServer('status', 'Inactive')
-
-    #---------------------------------------------------------------------------
-    # determine if the specific host is reachable
-    def _hostIsReachable(self):
-        self.logger.debug('checking host - %s:%d', self.address, self.port)
-
-        ret = None
-
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((self.address, self.port))
-            sock.close()
-            ret = True
-        except:
-            ret = False
-
-        return ret
-
-    #---------------------------------------------------------------------------
-    # defined here as a convenience to subclasses
-    def _exec(self, *cmd):
-        self.execLock.acquire()
-        self.logger.debug(u'=> exec%s', cmd)
-
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        pout, perr = proc.communicate()
-        self.logger.debug(u'=> exit(%d)', proc.returncode)
-
-        # TODO check perr
-        #self.logger.warn(perr)
-
-        self.execLock.release()
-        return (proc.returncode == 0)
 
 ################################################################################
 # a network service that supports on / off state (relay device)
@@ -292,14 +257,9 @@ class NetworkRelayDevice(NetworkServiceDevice):
     #---------------------------------------------------------------------------
     # basic check to see if the server is responding
     def updateStatus(self):
-        status = self._hostIsReachable()
-        self._setDeviceStatus(status)
-
-    #---------------------------------------------------------------------------
-    def _setDeviceStatus(self, deviceIsAvailable):
         device = self.device
 
-        if deviceIsAvailable:
+        if self.client.isAvailable():
             self.logger.debug(u'%s is AVAILABLE', device.name)
             device.updateStateOnServer('onOffState', 'on')
         else:
@@ -314,61 +274,23 @@ class NetworkRelayDevice_SSH(NetworkRelayDevice):
         NetworkRelayDevice.__init__(self, device)
         self.logger = logging.getLogger('Plugin.NetworkRelayDevice_SSH')
 
-    #---------------------------------------------------------------------------
-    def updateStatus(self):
-        device = self.device
+        address = device.pluginProps['address']
+        port = int(device.pluginProps['port'])
+        username = device.pluginProps['username']
+        client = clients.SSHClient(address, port, username)
 
-        statusCmd = device.pluginProps['cmd_status']
-        self.logger.debug(u'checking remote status: %s', statusCmd)
+        client.commands['status'] = device.pluginProps['cmd_status']
+        client.commands['shutdown'] = device.pluginProps['cmd_shutdown']
 
-        # execute the command and update status
-        cmd = shlex.split(statusCmd)
-        status = self._rexec(*cmd)
-        self._setDeviceStatus(status)
+        self.client = client
 
     #---------------------------------------------------------------------------
     def turnOff(self):
         device = self.device
-
-        shutdownCmd = device.pluginProps['cmd_shutdown']
         self.logger.info(u'Shutting down %s', device.name)
-        self.logger.debug(u'=> %s', shutdownCmd)
 
-        # execute the command remotely
-        cmd = shlex.split(shutdownCmd)
-        status = self._rexec(*cmd)
-
-        if status is False:
+        if not self.client.turnOff():
             self.logger.error(u'Could not turn off remote server: %s', device.name)
-
-    #---------------------------------------------------------------------------
-    def _rexec(self, *cmd):
-        device = self.device
-
-        # setup the remote command using a safe ssh config
-        # XXX -f would be ideal, but we lose the return code of the remote command
-        rcmd = ['ssh', '-anTxq']
-
-        # TODO support global timeout, e.g.
-        #rcmd.append('-o', 'ConnectTimeout=%d' % connectionTimeout)
-
-        # username is optional for SSH commands...
-        username = device.pluginProps.get('username', None)
-        if username is not None and len(username) > 0:
-            self.logger.debug(u'running as remote user: %s', username)
-            rcmd.extend(('-l', username))
-        else:
-            # TODO capture local username in debug log
-            self.logger.debug(u'running as local user')
-
-        # add the host and port
-        rcmd.extend(('-p', device.pluginProps['port']))
-        rcmd.append(device.pluginProps['address'])
-
-        # add all commands supplied by caller
-        rcmd.extend(cmd)
-
-        return self._exec(*rcmd)
 
 ################################################################################
 class NetworkRelayDevice_Telnet(NetworkRelayDevice):
@@ -385,13 +307,16 @@ class NetworkRelayDevice_macOS(NetworkRelayDevice_SSH):
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
-        # configure known properties for mac servers - FIXME doesn't work
-        device.pluginProps['port'] = '22'
-        device.pluginProps['cmd_status'] = '/usr/bin/true'
-        device.pluginProps['cmd_shutdown'] = '/sbin/shutdown -h now'
-
-        # TODO how to handle password authentication?
-
         NetworkRelayDevice_SSH.__init__(self, device)
         self.logger = logging.getLogger('Plugin.NetworkRelayDevice_macOS')
+
+        address = device.pluginProps['address']
+        username = device.pluginProps['username']
+        password = device.pluginProps['password']
+        client = clients.SSHClient(address, 22, username)
+
+        client.commands['status'] = '/usr/bin/true'
+        client.commands['shutdown'] = '/sbin/shutdown -h now'
+
+        self.client = client
 
