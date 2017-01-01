@@ -133,16 +133,29 @@ class Plugin(indigo.PluginBase):
     #---------------------------------------------------------------------------
     def _loadPluginPrefs(self, values):
         # setup logging system
-        logLevel = int(values['logLevel'])
-        self.logLevel = logLevel
-
+        logLevel = values.get('logLevel', None)
+        if logLevel is None:
+            self.logLevel = 20
+        else:
+            self.logLevel = int(logLevel)
         self.indigo_log_handler.setLevel(self.logLevel)
-        self.logger.debug(u'pluginPrefs[logLevel] - %s', self.logLevel)
+        self.logger.debug(u'{logLevel} - %s', self.logLevel)
 
-        # socket connection timeout
-        timeout = int(values['connectionTimeout'])
-        socket.setdefaulttimeout(timeout)
-        self.logger.debug(u'pluginPrefs[connectionTimeout] - %d sec', timeout)
+        # global socket connection timeout - XXX does this affect all modules?
+        timeoutVal = values.get('connectionTimeout', None)
+        if timeoutVal is None:
+            socket.setdefaulttimeout(5)
+        else:
+            socket.setdefaulttimeout(int(timeoutVal))
+        self.logger.debug(u'{connectionTimeout} - %d sec', socket.getdefaulttimeout())
+
+        # read refresh interval
+        refreshVal = values.get('refreshInterval', None)
+        if refreshVal is None:
+            self.refreshInterval = 60
+        else:
+            self.refreshInterval = int(refreshVal)
+        self.logger.debug(u'{refreshInterval} - %d seconds', self.refreshInterval)
 
     #---------------------------------------------------------------------------
     def _runLoopStep(self):
@@ -152,9 +165,7 @@ class Plugin(indigo.PluginBase):
             obj.updateStatus()
 
         # sleep for the configured timeout
-        refreshInterval = int(self.pluginPrefs['refreshInterval'])
-        self.logger.debug(u'Next update in %d seconds', refreshInterval)
-        self.sleep(refreshInterval)
+        self.sleep(self.refreshInterval)
 
     #---------------------------------------------------------------------------
     # Relay / Dimmer Action callback
