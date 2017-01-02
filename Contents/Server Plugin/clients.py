@@ -31,6 +31,26 @@ class ClientBase():
         self.execLock.release()
         return (proc.returncode == 0)
 
+################################################################################
+class LocalCommand(ClientBase):
+
+    #---------------------------------------------------------------------------
+    def __init__(self, statusCommand='/usr/bin/true'):
+        ClientBase.__init__(self)
+        self.logger = logging.getLogger('Plugin.LocalCommand')
+
+        self.statusCommand = statusCommand
+
+    #---------------------------------------------------------------------------
+    def isAvailable(self):
+        statusCmd = self.statusCommand
+        self.logger.debug(u'checking status: %s', statusCmd)
+
+        if statusCmd is None:
+            return False
+        else:
+            cmd = shlex.split(statusCmd)
+            return self._exec(*cmd)
 
 ################################################################################
 class ServiceClient(ClientBase):
@@ -65,12 +85,13 @@ class SSHClient(ServiceClient):
     # FIXME not a big fan of the "commands" dictionary...
 
     #---------------------------------------------------------------------------
-    def __init__(self, address, port=22, username=None):
+    def __init__(self, address, port=22, username=None, password=None):
         ServiceClient.__init__(self, address, port)
         self.logger = logging.getLogger('Plugin.SSHClient')
 
         self.commands = dict()
         self.username = username
+        self.password = password
 
     #---------------------------------------------------------------------------
     def isAvailable(self):
