@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+## Indigo plugin for monitoring network devices
 
 import logging
 import socket
@@ -255,13 +255,6 @@ class NetworkRelayDevice(NetworkServiceDevice):
         raise NotImplementedError()
 
     #---------------------------------------------------------------------------
-    @staticmethod
-    def validateConfig(values, errors):
-        NetworkServiceDevice.validateConfig(values, errors)
-        validateConfig_String('cmd_status', values, errors, emptyOk=False)
-        validateConfig_String('cmd_shutdown', values, errors, emptyOk=False)
-
-    #---------------------------------------------------------------------------
     # default behavior; subclasses should provide correct implementation
     def turnOff(self):
         self.logger.warn(u'Not supported - Turn Off %s', self.device.name)
@@ -301,6 +294,13 @@ class NetworkRelayDevice_SSH(NetworkRelayDevice):
 
         self.client = client
         self.device = device
+
+    #---------------------------------------------------------------------------
+    @staticmethod
+    def validateConfig(values, errors):
+        NetworkServiceDevice.validateConfig(values, errors)
+        validateConfig_String('cmd_status', values, errors, emptyOk=False)
+        validateConfig_String('cmd_shutdown', values, errors, emptyOk=False)
 
     #---------------------------------------------------------------------------
     def turnOff(self):
