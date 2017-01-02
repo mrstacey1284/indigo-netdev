@@ -98,22 +98,6 @@
         <Description>Attempt to log in using the provided username.</Description>
       </Field>
 
-      <!-- XXX maybe keypair is best rather than supporting multiple methods?
-      <Field type="menu" id="authType" defaultValue="none">
-        <Label>Authentication Method</Label>
-        <List>
-          <Option value="none">None</Option>
-          <Option value="passwd">Password</Option>
-          <Option value="key">Key Exchange</Option>
-        </List>
-      </Field>
-
-      <Field id="password" type="textfield" secure="true"
-       visibleBindingId="authType" visibleBindingValue="passwd">
-        <Label>Password</Label>
-      </Field>
-      -->
-
       <Field id="advConfigSep" type="separator" />
       <Field type="checkbox" id="advConfig" defaultValue="false">
         <Label>Advanced Configuration</Label>
@@ -133,7 +117,7 @@
     </ConfigUI>
   </Device>
 
-  <!-- ========================================================
+  <!-- ======================================================== -->
   <Device type="relay" id="macos">
     <Name>macOS Server</Name>
 
@@ -155,6 +139,5 @@
       </Field>
     </ConfigUI>
   </Device>
-  -->
 
 </Devices>

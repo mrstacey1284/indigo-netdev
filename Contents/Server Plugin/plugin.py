@@ -76,6 +76,12 @@ class Plugin(indigo.PluginBase):
         elif typeId == 'ssh':
             NetworkRelayDevice_SSH.validateConfig(values, errors)
 
+        elif typeId == 'telnet':
+            NetworkRelayDevice_Telnet.validateConfig(values, errors)
+
+        elif typeId == 'macos':
+            NetworkRelayDevice_macOS.validateConfig(values, errors)
+
         return ((len(errors) == 0), values, errors)
 
     #---------------------------------------------------------------------------
@@ -215,9 +221,10 @@ class NetworkServiceDevice():
 
         address = device.pluginProps['address']
         port = int(device.pluginProps['port'])
-        self.client = clients.ServiceClient(address, port)
+        client = clients.ServiceClient(address, port)
 
         self.device = device
+        self.client = client
 
     #---------------------------------------------------------------------------
     @staticmethod
@@ -245,8 +252,7 @@ class NetworkRelayDevice(NetworkServiceDevice):
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
-        NetworkServiceDevice.__init__(self, device)
-        self.logger = logging.getLogger('Plugin.NetworkRelayDevice')
+        raise NotImplementedError()
 
     #---------------------------------------------------------------------------
     @staticmethod
@@ -282,18 +288,19 @@ class NetworkRelayDevice_SSH(NetworkRelayDevice):
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
-        NetworkRelayDevice.__init__(self, device)
+        # to emit Indigo events, logger must be a child of 'Plugin'
         self.logger = logging.getLogger('Plugin.NetworkRelayDevice_SSH')
 
         address = device.pluginProps['address']
         port = int(device.pluginProps['port'])
-        username = device.pluginProps['username']
-        client = clients.SSHClient(address, port, username)
+        uname = device.pluginProps['username']
+        client = clients.SSHClient(address, port=port, username=uname)
 
         client.commands['status'] = device.pluginProps['cmd_status']
         client.commands['shutdown'] = device.pluginProps['cmd_shutdown']
 
         self.client = client
+        self.device = device
 
     #---------------------------------------------------------------------------
     def turnOff(self):
@@ -308,8 +315,14 @@ class NetworkRelayDevice_Telnet(NetworkRelayDevice):
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
-        NetworkRelayDevice.__init__(self, device)
+        # to emit Indigo events, logger must be a child of 'Plugin'
         self.logger = logging.getLogger('Plugin.NetworkRelayDevice_Telnet')
+
+        address = device.pluginProps['address']
+        uname = device.pluginProps.get('username', None)
+        passwd = device.pluginProps.get('password', None)
+
+        self.device = device
 
 ################################################################################
 class NetworkRelayDevice_macOS(NetworkRelayDevice_SSH):
@@ -318,16 +331,23 @@ class NetworkRelayDevice_macOS(NetworkRelayDevice_SSH):
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
-        NetworkRelayDevice_SSH.__init__(self, device)
+        # to emit Indigo events, logger must be a child of 'Plugin'
         self.logger = logging.getLogger('Plugin.NetworkRelayDevice_macOS')
 
         address = device.pluginProps['address']
-        username = device.pluginProps['username']
-        password = device.pluginProps['password']
-        client = clients.SSHClient(address, 22, username)
+        uname = device.pluginProps.get('username', None)
+        passwd = device.pluginProps.get('password', None)
+        client = clients.SSHClient(address, username=uname, password=passwd)
 
+        # macOS commands are known and cannot be changed by the user
         client.commands['status'] = '/usr/bin/true'
         client.commands['shutdown'] = '/sbin/shutdown -h now'
 
         self.client = client
+        self.device = device
+
+    #---------------------------------------------------------------------------
+    @staticmethod
+    def validateConfig(values, errors):
+        validateConfig_String('address', values, errors, emptyOk=False)
 

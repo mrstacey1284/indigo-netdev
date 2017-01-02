@@ -65,12 +65,13 @@ class SSHClient(ServiceClient):
     # FIXME not a big fan of the "commands" dictionary...
 
     #---------------------------------------------------------------------------
-    def __init__(self, address, port=22, username=None):
+    def __init__(self, address, port=22, username=None, password=None):
         ServiceClient.__init__(self, address, port)
         self.logger = logging.getLogger('Plugin.SSHClient')
 
         self.commands = dict()
         self.username = username
+        self.password = password
 
     #---------------------------------------------------------------------------
     def isAvailable(self):
