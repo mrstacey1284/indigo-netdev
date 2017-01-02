@@ -31,6 +31,26 @@ class ClientBase():
         self.execLock.release()
         return (proc.returncode == 0)
 
+################################################################################
+class LocalCommand(ClientBase):
+
+    #---------------------------------------------------------------------------
+    def __init__(self, statusCommand='/usr/bin/true'):
+        ClientBase.__init__(self)
+        self.logger = logging.getLogger('Plugin.LocalCommand')
+
+        self.statusCommand = statusCommand
+
+    #---------------------------------------------------------------------------
+    def isAvailable(self):
+        statusCmd = self.statusCommand
+        self.logger.debug(u'checking status: %s', statusCmd)
+
+        if statusCmd is None:
+            return False
+        else:
+            cmd = shlex.split(statusCmd)
+            return self._exec(*cmd)
 
 ################################################################################
 class ServiceClient(ClientBase):
