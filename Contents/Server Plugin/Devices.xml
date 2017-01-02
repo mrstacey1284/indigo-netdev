@@ -137,6 +137,9 @@
       <Field id="password" type="textfield" secure="true">
         <Label>Password</Label>
       </Field>
+      <Field id="passwordHelp" type="label" fontSize="mini" alignWithControl="true">
+        <Label>NOTE: currently passwords are not supported.  You must have an SSH keypair registered for the remote system.</Label>
+      </Field>
     </ConfigUI>
   </Device>
 

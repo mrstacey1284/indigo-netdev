@@ -7,6 +7,7 @@ import clients
 # keep logging output to a minumim for testing
 logging.basicConfig(level=logging.ERROR)
 
+################################################################################
 class GoogleDNSService(unittest.TestCase):
 
     def setUp(self):
@@ -16,6 +17,7 @@ class GoogleDNSService(unittest.TestCase):
         available = self.client.isAvailable()
         self.assertTrue(available)
 
+################################################################################
 class BasicLocalCommand(unittest.TestCase):
 
     def setUp(self):
@@ -25,6 +27,7 @@ class BasicLocalCommand(unittest.TestCase):
         available = self.client.isAvailable()
         self.assertTrue(available)
 
+################################################################################
 class LocalHostSSH(unittest.TestCase):
 
     def setUp(self):
