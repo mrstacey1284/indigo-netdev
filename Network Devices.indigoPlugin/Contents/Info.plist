@@ -4,9 +4,9 @@
 <plist version="1.0">
   <dict>
     <key>CFBundleDisplayName</key><string>Network Devices</string>
-    <key>PluginVersion</key><string>2.0.3</string>
+    <key>PluginVersion</key><string>2.0.4</string>
     <key>CFBundleIdentifier</key><string>com.heddings.indigo.netdev</string>
-    <key>ServerApiVersion</key><string>1.9</string>
+    <key>ServerApiVersion</key><string>2.0</string>
     <key>CFBundleVersion</key><string>1.0.0</string>
 
     <key>CFBundleURLTypes</key>
