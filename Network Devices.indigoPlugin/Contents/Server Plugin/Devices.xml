@@ -33,47 +33,32 @@
     <UiDisplayStateId>status</UiDisplayStateId>
   </Device>
 
-  <!-- ========================================================
-  <Device type="relay" id="telnet">
-    <Name>Telnet Server</Name>
+  <!-- ======================================================== -->
+  <Device type="custom" id="ping">
+    <Name>Ping Service</Name>
 
     <ConfigUI>
       <Field id="address" type="textfield">
         <Label>IP address or hostname</Label>
       </Field>
-
-      <Field id="port" type="textfield" defaultValue="23">
-        <Label>Telnet port</Label>
-      </Field>
-
-      <Field id="advConfigSep" type="separator" />
-
-      <Field id="cmd_prompt" type="textfield" defaultValue="#">
-        <Label>Command prompt</Label>
-      </Field>
-      <Field id="cmd_prompt_help" type="label" fontSize="mini" alignWithControl="true">
-        <Label>Identify the prompt used for interactive shells.</Label>
-      </Field>
-
-      <Field id="cmd_status" type="textfield" defaultValue="/bin/true">
-        <Label>Status command</Label>
-      </Field>
-      <Field id="cmd_status_help" type="label" fontSize="mini" alignWithControl="true">
-        <Label>The command used to check status on the remote system.</Label>
-      </Field>
-
-      <Field id="cmd_shutdown" type="textfield" defaultValue="shutdown -h now">
-        <Label>Shutdown command</Label>
-      </Field>
-      <Field id="cmd_shutdown_help" type="label" fontSize="mini" alignWithControl="true">
-        <Label>The command used to "turn off" the system from the command line.</Label>
-      </Field>
     </ConfigUI>
 
     <States>
+      <State id="active">
+        <ValueType>Boolean</ValueType>
+        <TriggerLabel>Device is Active</TriggerLabel>
+        <ControlPageLabel>Device is Active</ControlPageLabel>
+      </State>
+
+      <State id="status">
+        <ValueType>String</ValueType>
+        <TriggerLabel>Device Status Changes</TriggerLabel>
+        <ControlPageLabel>Device Status</ControlPageLabel>
+      </State>
     </States>
+
+    <UiDisplayStateId>status</UiDisplayStateId>
   </Device>
-  -->
 
   <!-- ======================================================== -->
   <Device type="relay" id="ssh">
@@ -117,7 +102,7 @@
     </ConfigUI>
   </Device>
 
-  <!-- ======================================================== -->
+  <!-- ========================================================
   <Device type="relay" id="macos">
     <Name>macOS Server</Name>
 
@@ -142,5 +127,6 @@
       </Field>
     </ConfigUI>
   </Device>
+  -->
 
 </Devices>

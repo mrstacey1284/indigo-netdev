@@ -47,11 +47,12 @@ def validateConfig_Int(key, values, errors, min=None, max=None):
 ################################################################################
 class Plugin(indigo.PluginBase):
 
+    objects = dict()
+
     #---------------------------------------------------------------------------
     def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
         indigo.PluginBase.__init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs)
         self._loadPluginPrefs(pluginPrefs)
-        self.objects = dict()
 
     #---------------------------------------------------------------------------
     def __del__(self):
@@ -72,6 +73,9 @@ class Plugin(indigo.PluginBase):
 
         if typeId == 'service':
             NetworkServiceDevice.validateConfig(values, errors)
+
+        elif typeId == 'ping':
+            NetworkServiceDevice_Ping.validateConfig(values, errors)
 
         elif typeId == 'ssh':
             NetworkRelayDevice_SSH.validateConfig(values, errors)
@@ -97,6 +101,10 @@ class Plugin(indigo.PluginBase):
 
         if typeId == 'service':
             obj = NetworkServiceDevice(device)
+            self.objects[device.id] = obj
+
+        elif typeId == 'ping':
+            obj = NetworkServiceDevice_Ping(device)
             self.objects[device.id] = obj
 
         elif typeId == 'ssh':
@@ -245,6 +253,25 @@ class NetworkServiceDevice():
             self.logger.debug(u'%s is UNAVAILABLE', device.name)
             device.updateStateOnServer('active', False)
             device.updateStateOnServer('status', 'Inactive')
+
+################################################################################
+# verify ping responses from a target address
+class NetworkServiceDevice_Ping(NetworkServiceDevice):
+
+    #---------------------------------------------------------------------------
+    def __init__(self, device):
+        # to emit Indigo events, logger must be a child of 'Plugin'
+        self.logger = logging.getLogger('Plugin.NetworkServiceDevice_Ping')
+
+        address = device.pluginProps['address']
+
+        self.device = device
+        self.client = clients.PingClient(address)
+
+    #---------------------------------------------------------------------------
+    @staticmethod
+    def validateConfig(values, errors):
+        validateConfig_String('address', values, errors, emptyOk=False)
 
 ################################################################################
 # a network service that supports on / off state (relay device)

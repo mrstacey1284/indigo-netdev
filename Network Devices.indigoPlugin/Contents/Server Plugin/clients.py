@@ -21,15 +21,19 @@ class ClientBase():
         self.execLock.acquire()
         self.logger.debug(u'=> exec%s', cmd)
 
+        retval = -1
+
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         pout, perr = proc.communicate()
-        self.logger.debug(u'=> exit(%d)', proc.returncode)
+
+        retval = proc.returncode
+        self.logger.debug(u'=> exit(%d)', retval)
 
         # TODO check perr
         #self.logger.warn(perr)
 
         self.execLock.release()
-        return (proc.returncode == 0)
+        return (retval == 0)
 
 ################################################################################
 class LocalCommand(ClientBase):
@@ -72,7 +76,7 @@ class ServiceClient(ClientBase):
 
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((self.address, self.port))
+            sock.connect( (self.address, self.port) )
             sock.close()
         except:
             ret = False
@@ -80,9 +84,31 @@ class ServiceClient(ClientBase):
         return ret
 
 ################################################################################
+class PingClient(ClientBase):
+
+    #---------------------------------------------------------------------------
+    def __init__(self, address):
+        ClientBase.__init__(self)
+        self.logger = logging.getLogger('Plugin.PingClient')
+        self.address = address
+
+    #---------------------------------------------------------------------------
+    # determine if the specific host is reachable
+    def isAvailable(self):
+        self.logger.debug('pinging address - %s', self.address)
+
+        # we will only wait for 1 ping response
+        cmd = ['/sbin/ping', '-c1', self.address]
+
+        return self._exec(*cmd)
+
+################################################################################
 class SSHClient(ServiceClient):
 
     # FIXME not a big fan of the "commands" dictionary...
+    # commands contain user-defined instructions for specific actions:
+    # - status : determine if the system is available
+    # - shutdown : shut the system down; halt; power off
 
     #---------------------------------------------------------------------------
     def __init__(self, address, port=22, username=None, password=None):
@@ -120,7 +146,7 @@ class SSHClient(ServiceClient):
     def _rexec(self, *cmd):
         # setup the remote command using a safe ssh config
         # XXX -f would be ideal, but we lose the return code of the remote command
-        rcmd = ['ssh', '-anTxq']
+        rcmd = ['/usr/bin/ssh', '-anTxq']
 
         # TODO support global timeout, e.g.
         #rcmd.append('-o', 'ConnectTimeout=%d' % connectionTimeout)
