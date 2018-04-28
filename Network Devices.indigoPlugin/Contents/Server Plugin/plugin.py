@@ -60,6 +60,13 @@ class Plugin(indigo.PluginBase):
         indigo.PluginBase.__del__(self)
 
     #---------------------------------------------------------------------------
+    def refreshAllDevices(self):
+        # update all enabled and configured devices
+        for id in self.objects:
+            obj = self.objects[id]
+            obj.updateStatus()
+
+    #---------------------------------------------------------------------------
     def validatePrefsConfigUi(self, values):
         errors = indigo.Dict()
 
@@ -103,32 +110,25 @@ class Plugin(indigo.PluginBase):
 
         self.logger.debug(u'Starting device - %s [%s]', device.name, typeId)
 
+        obj = None
+
         if typeId == 'service':
             obj = NetworkServiceDevice(device)
-            self.objects[device.id] = obj
-
         elif typeId == 'ping':
             obj = NetworkServiceDevice_Ping(device)
-            self.objects[device.id] = obj
-
         elif typeId == 'http':
             obj = NetworkServiceDevice_HTTP(device)
-            self.objects[device.id] = obj
-
         elif typeId == 'ssh':
             obj = NetworkRelayDevice_SSH(device)
-            self.objects[device.id] = obj
-
         elif typeId == 'telnet':
             obj = NetworkRelayDevice_Telnet(device)
-            self.objects[device.id] = obj
-
         elif typeId == 'macos':
             obj = NetworkRelayDevice_macOS(device)
-            self.objects[device.id] = obj
-
         else:
             self.logger.error(u'unknown device type: %s', typeId)
+
+        if obj is not None:
+            self.objects[device.id] = obj
 
     #---------------------------------------------------------------------------
     def deviceStopComm(self, device):
@@ -179,10 +179,7 @@ class Plugin(indigo.PluginBase):
 
     #---------------------------------------------------------------------------
     def _runLoopStep(self):
-        # update all enabled and configured devices
-        for id in self.objects:
-            obj = self.objects[id]
-            obj.updateStatus()
+        self.refreshAllDevices()
 
         # sleep for the configured timeout
         self.sleep(self.refreshInterval)
