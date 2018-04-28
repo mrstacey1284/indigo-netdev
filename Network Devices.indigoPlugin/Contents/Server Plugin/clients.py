@@ -3,6 +3,7 @@
 import logging
 import shlex
 import socket
+import urllib2
 import threading
 import subprocess
 
@@ -101,6 +102,36 @@ class PingClient(ClientBase):
         cmd = ['/sbin/ping', '-c1', self.address]
 
         return self._exec(*cmd)
+
+################################################################################
+class HttpClient(ClientBase):
+
+    #---------------------------------------------------------------------------
+    def __init__(self, url):
+        ClientBase.__init__(self)
+        self.logger = logging.getLogger('Plugin.HttpClient')
+        self.url = url
+
+    #---------------------------------------------------------------------------
+    # determine if the returned status code is success or error
+    def isAvailable(self):
+        self.logger.debug('connecting to URL - %s', self.url)
+        available = None
+
+        try:
+            resp = urllib2.urlopen(self.url)
+            status = resp.getcode()
+
+            self.logger.debug('HTTP status - %d', status)
+            available = (200 <= status <= 299)
+
+            # XXX how are redirects handled?
+
+        except Exception as e:
+            self.logger.error(str(e))
+            available = False
+
+        return available
 
 ################################################################################
 class SSHClient(ServiceClient):

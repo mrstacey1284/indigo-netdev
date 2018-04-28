@@ -61,6 +61,38 @@
   </Device>
 
   <!-- ======================================================== -->
+  <Device type="custom" id="http">
+    <Name>HTTP Status</Name>
+
+    <ConfigUI>
+      <Field id="url" type="textfield">
+        <Label>URL</Label>
+      </Field>
+
+      <!-- for display purposes -->
+      <Field id="address" type="textfield" hidden="yes">
+        <Label>Address</Label>
+      </Field>
+    </ConfigUI>
+
+    <States>
+      <State id="active">
+        <ValueType>Boolean</ValueType>
+        <TriggerLabel>Device is Active</TriggerLabel>
+        <ControlPageLabel>Device is Active</ControlPageLabel>
+      </State>
+
+      <State id="status">
+        <ValueType>String</ValueType>
+        <TriggerLabel>Device Status Changes</TriggerLabel>
+        <ControlPageLabel>Device Status</ControlPageLabel>
+      </State>
+    </States>
+
+    <UiDisplayStateId>status</UiDisplayStateId>
+  </Device>
+
+  <!-- ======================================================== -->
   <Device type="relay" id="ssh">
     <Name>SSH Server</Name>
 

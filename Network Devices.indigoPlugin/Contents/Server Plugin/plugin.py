@@ -2,6 +2,7 @@
 
 import logging
 import socket
+import urllib2
 
 import clients
 
@@ -77,6 +78,9 @@ class Plugin(indigo.PluginBase):
         elif typeId == 'ping':
             NetworkServiceDevice_Ping.validateConfig(values, errors)
 
+        elif typeId == 'http':
+            NetworkServiceDevice_HTTP.validateConfig(values, errors)
+
         elif typeId == 'ssh':
             NetworkRelayDevice_SSH.validateConfig(values, errors)
 
@@ -105,6 +109,10 @@ class Plugin(indigo.PluginBase):
 
         elif typeId == 'ping':
             obj = NetworkServiceDevice_Ping(device)
+            self.objects[device.id] = obj
+
+        elif typeId == 'http':
+            obj = NetworkServiceDevice_HTTP(device)
             self.objects[device.id] = obj
 
         elif typeId == 'ssh':
@@ -272,6 +280,31 @@ class NetworkServiceDevice_Ping(NetworkServiceDevice):
     @staticmethod
     def validateConfig(values, errors):
         validateConfig_String('address', values, errors, emptyOk=False)
+
+################################################################################
+# verify http status from a given URL
+class NetworkServiceDevice_HTTP(NetworkServiceDevice):
+
+    #---------------------------------------------------------------------------
+    def __init__(self, device):
+        # to emit Indigo events, logger must be a child of 'Plugin'
+        self.logger = logging.getLogger('Plugin.NetworkServiceDevice_HTTP')
+
+        url = device.pluginProps['url']
+
+        self.device = device
+        self.client = clients.HttpClient(url)
+
+    #---------------------------------------------------------------------------
+    @staticmethod
+    def validateConfig(values, errors):
+        validateConfig_String('url', values, errors, emptyOk=False)
+
+        # update 'address' for proper display
+        url = values['url']
+        req = urllib2.Request(url)
+
+        values['address'] = req.get_host()
 
 ################################################################################
 # a network service that supports on / off state (relay device)

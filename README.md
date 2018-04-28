@@ -43,6 +43,14 @@ usefuly to get a quick status for remote systems when the service itself is less
 
 These device support status only.
 
+### Ping Status
+
+Pings an address and reports 'Active' if it responds succesfully.
+
+### HTTP Status
+
+Examine the HTTP status of a path and set device as OK or ERROR.
+
 ### SSH Server
 
 All SSH commands are authenticated using a shared keypair.  This must be generated and
@@ -67,27 +75,11 @@ system from the command line.
 
 *NOTE* once turned off, these devices must be turned on at the system.
 
-### Telnet Server
-
-*Not Yet Implemented*
-
-These will function much like SSH Servers using telnet to communicate with the remote system.
-
-*NOTE* once turned off, these devices must be turned on at the system.
-
 ### macOS Server
 
 *Not Yet Implemented*
 
 These will function much like SSH Servers with specific configuration to macOS.
-
-*NOTE* once turned off, these devices must be turned on at the system.
-
-### HTTP Status
-
-*Not Yet Implemented*
-
-Examine the HTTP status of a path and set device as OK or ERROR.
 
 *NOTE* once turned off, these devices must be turned on at the system.
 
