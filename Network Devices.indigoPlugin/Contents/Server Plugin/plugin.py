@@ -85,6 +85,8 @@ class Plugin(indigo.PluginBase):
             DeviceWrapper_Ping.validateConfig(values, errors)
         elif typeId == 'http':
             DeviceWrapper_HTTP.validateConfig(values, errors)
+        elif typeId == 'local':
+            DeviceWrapper_Local.validateConfig(values, errors)
         elif typeId == 'ssh':
             DeviceWrapper_SSH.validateConfig(values, errors)
         elif typeId == 'macos':
@@ -111,6 +113,8 @@ class Plugin(indigo.PluginBase):
             obj = DeviceWrapper_Ping(device)
         elif typeId == 'http':
             obj = DeviceWrapper_HTTP(device)
+        elif typeId == 'local':
+            obj = DeviceWrapper_Local(device)
         elif typeId == 'ssh':
             obj = DeviceWrapper_SSH(device)
         elif typeId == 'macos':
@@ -330,6 +334,24 @@ class DeviceWrapper_HTTP(DeviceWrapper):
         req = urllib2.Request(url)
 
         values['address'] = req.get_host()
+
+################################################################################
+# plugin device wrapper for Local Device types
+class DeviceWrapper_Local(DeviceWrapper):
+
+    #---------------------------------------------------------------------------
+    def __init__(self, device):
+        # to emit Indigo events, logger must be a child of 'Plugin'
+        self.logger = logging.getLogger('Plugin.DeviceWrapper_Local')
+
+        address = device.pluginProps['address']
+
+        self.device = device
+
+    #---------------------------------------------------------------------------
+    @staticmethod
+    def validateConfig(values, errors):
+        validateConfig_String('address', values, errors, emptyOk=False)
 
 ################################################################################
 # plugin device wrapper for SSH Device types
