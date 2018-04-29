@@ -49,7 +49,7 @@ def validateConfig_Int(key, values, errors, min=None, max=None):
 ################################################################################
 class Plugin(indigo.PluginBase):
 
-    objects = dict()
+    wrappers = dict()
     arp_cache = None
 
     #---------------------------------------------------------------------------
@@ -64,9 +64,9 @@ class Plugin(indigo.PluginBase):
     #---------------------------------------------------------------------------
     def refreshAllDevices(self):
         # update all enabled and configured devices
-        for id in self.objects:
-            obj = self.objects[id]
-            obj.updateStatus()
+        for id in self.wrappers:
+            wrapper = self.wrappers[id]
+            wrapper.updateStatus()
 
     #---------------------------------------------------------------------------
     def rebuildArpCache(self):
@@ -133,30 +133,36 @@ class Plugin(indigo.PluginBase):
 
         self.logger.debug(u'Starting device - %s [%s]', device.name, typeId)
 
-        obj = None
+        wrapper = None
 
         if typeId == 'service':
-            obj = DeviceWrapper_Service(device)
+            wrapper = DeviceWrapper_Service(device)
         elif typeId == 'ping':
-            obj = DeviceWrapper_Ping(device)
+            wrapper = DeviceWrapper_Ping(device)
         elif typeId == 'http':
-            obj = DeviceWrapper_HTTP(device)
+            wrapper = DeviceWrapper_HTTP(device)
         elif typeId == 'local':
-            obj = DeviceWrapper_Local(device)
+            wrapper = DeviceWrapper_Local(device)
         elif typeId == 'ssh':
-            obj = DeviceWrapper_SSH(device)
+            wrapper = DeviceWrapper_SSH(device)
         elif typeId == 'macos':
-            obj = DeviceWrapper_macOS(device)
+            wrapper = DeviceWrapper_macOS(device)
         else:
             self.logger.error(u'unknown device type: %s', typeId)
 
-        self.objects[device.id] = obj
+        self.wrappers[device.id] = wrapper
+
+        # XXX we might want to make sure the device status is updated here...
+        # the problem with that is it makes for a long plugin startup if all
+        # devices update status - especially things like ping and http.
+        # !! when status is updated here, start the thread loop with a sleep !!
+        #if device.configured: wrapper.updateStatus()
 
     #---------------------------------------------------------------------------
     def deviceStopComm(self, device):
         self.logger.debug(u'Stopping device: %s', device.name)
 
-        self.objects.pop(device.id, None)
+        self.wrappers.pop(device.id, None)
 
     #---------------------------------------------------------------------------
     def runConcurrentThread(self):
@@ -213,22 +219,22 @@ class Plugin(indigo.PluginBase):
         act = action.deviceAction
         self.logger.debug(u'actionControlDimmerRelay[%s] - %s', act, device.name)
 
-        obj = self.objects[device.id]
+        wrapper = self.wrappers[device.id]
 
         #### TURN ON ####
         if act == indigo.kDimmerRelayAction.TurnOn:
-            obj.turnOn()
+            wrapper.turnOn()
 
         #### TURN OFF ####
         elif act == indigo.kDimmerRelayAction.TurnOff:
-            obj.turnOff()
+            wrapper.turnOff()
 
         #### TOGGLE ####
         elif act == indigo.kDimmerRelayAction.Toggle:
             if device.onState:
-                obj.turnOff()
+                wrapper.turnOff()
             else:
-                obj.turnOn()
+                wrapper.turnOn()
 
     #---------------------------------------------------------------------------
     # General Action callback
@@ -236,18 +242,18 @@ class Plugin(indigo.PluginBase):
         act = action.deviceAction
         self.logger.debug(u'actionControlGeneral[%s] - %s', act, device.name)
 
-        obj = self.objects[device.id]
+        wrapper = self.wrappers[device.id]
 
         #### STATUS REQUEST ####
         if act == indigo.kDeviceGeneralAction.RequestStatus:
-            obj.updateStatus()
+            wrapper.updateStatus()
 
         #### BEEP ####
         elif act == indigo.kDeviceGeneralAction.Beep:
             pass
 
 ################################################################################
-# device wrapper for plugin objects
+# wrapper base class for device types
 class DeviceWrapper():
 
     #---------------------------------------------------------------------------
