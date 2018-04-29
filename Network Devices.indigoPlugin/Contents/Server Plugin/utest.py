@@ -117,6 +117,34 @@ class ValidateIntegers(unittest.TestCase):
         utils.validateConfig_Int('NaN', self.values, errors, min=-1, max=1)
         self.assertIn('NaN', errors)
 
+    #---------------------------------------------------------------------------
+    def test_SmallNumberOk(self):
+        errors = dict()
+
+        utils.validateConfig_Int('small', self.values, errors, min=0, max=1)
+        self.assertNotIn('small', errors)
+
+    #---------------------------------------------------------------------------
+    def test_SmallNumberNotOk(self):
+        errors = dict()
+
+        utils.validateConfig_Int('small', self.values, errors, min=1, max=1000)
+        self.assertIn('small', errors)
+
+    #---------------------------------------------------------------------------
+    def test_BigNumberOk(self):
+        errors = dict()
+
+        utils.validateConfig_Int('big', self.values, errors, min=1, max=sys.maxint)
+        self.assertNotIn('big', errors)
+
+    #---------------------------------------------------------------------------
+    def test_BigNumberNotOk(self):
+        errors = dict()
+
+        utils.validateConfig_Int('big', self.values, errors, min=0, max=1)
+        self.assertIn('big', errors)
+
 ################################################################################
 class ValidateEmptyStrings(unittest.TestCase):
 
