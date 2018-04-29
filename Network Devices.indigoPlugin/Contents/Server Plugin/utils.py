@@ -8,11 +8,13 @@ def validateConfig_URL(key, values, errors, emptyOk=False):
 ################################################################################
 def validateConfig_MAC(key, values, errors, emptyOk=False):
     # TODO verify correct MAC format
+    # regex: ^([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])$
     return validateConfig_String(key, values, errors, emptyOk)
 
 ################################################################################
 def validateConfig_Hostname(key, values, errors, emptyOk=False):
     # TODO verify correct hostname
+    # regex: ^(\w[\-\.])+$
     return validateConfig_String(key, values, errors, emptyOk)
 
 ################################################################################
