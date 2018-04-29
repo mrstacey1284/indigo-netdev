@@ -97,10 +97,40 @@ class ValidateIntegers(unittest.TestCase):
         self.values['NaN'] = 'NaN'
 
     #---------------------------------------------------------------------------
+    def test_AllOk(self):
+        errors = dict()
+
+        utils.validateConfig_Int('zero', self.values, errors)
+        self.assertNotIn('zero', errors)
+
+        utils.validateConfig_Int('negative', self.values, errors)
+        self.assertNotIn('negative', errors)
+
+        utils.validateConfig_Int('small', self.values, errors)
+        self.assertNotIn('small', errors)
+
+        utils.validateConfig_Int('big', self.values, errors)
+        self.assertNotIn('big', errors)
+
+    #---------------------------------------------------------------------------
     def test_ZeroOk(self):
         errors = dict()
 
+        utils.validateConfig_Int('zero', self.values, errors)
+        self.assertNotIn('zero', errors)
+
+    #---------------------------------------------------------------------------
+    def test_BoundedZeroOk(self):
+        errors = dict()
+
         utils.validateConfig_Int('zero', self.values, errors, min=-1, max=1)
+        self.assertNotIn('zero', errors)
+
+    #---------------------------------------------------------------------------
+    def test_ZeroOnlyOk(self):
+        errors = dict()
+
+        utils.validateConfig_Int('zero', self.values, errors, min=0, max=0)
         self.assertNotIn('zero', errors)
 
     #---------------------------------------------------------------------------
@@ -114,7 +144,7 @@ class ValidateIntegers(unittest.TestCase):
     def test_NaN(self):
         errors = dict()
 
-        utils.validateConfig_Int('NaN', self.values, errors, min=-1, max=1)
+        utils.validateConfig_Int('NaN', self.values, errors)
         self.assertIn('NaN', errors)
 
     #---------------------------------------------------------------------------
@@ -128,22 +158,36 @@ class ValidateIntegers(unittest.TestCase):
     def test_SmallNumberNotOk(self):
         errors = dict()
 
-        utils.validateConfig_Int('small', self.values, errors, min=1, max=1000)
+        utils.validateConfig_Int('small', self.values, errors, min=2)
         self.assertIn('small', errors)
 
     #---------------------------------------------------------------------------
     def test_BigNumberOk(self):
         errors = dict()
 
-        utils.validateConfig_Int('big', self.values, errors, min=1, max=sys.maxint)
+        utils.validateConfig_Int('big', self.values, errors, min=1)
         self.assertNotIn('big', errors)
 
     #---------------------------------------------------------------------------
     def test_BigNumberNotOk(self):
         errors = dict()
 
-        utils.validateConfig_Int('big', self.values, errors, min=0, max=1)
+        utils.validateConfig_Int('big', self.values, errors, min=0, max=0)
         self.assertIn('big', errors)
+
+    #---------------------------------------------------------------------------
+    def test_NegativeOk(self):
+        errors = dict()
+
+        utils.validateConfig_Int('negative', self.values, errors, max=0)
+        self.assertNotIn('negative', errors)
+
+    #---------------------------------------------------------------------------
+    def test_NegativeNotOk(self):
+        errors = dict()
+
+        utils.validateConfig_Int('negative', self.values, errors, min=0)
+        self.assertIn('negative', errors)
 
 ################################################################################
 class ValidateEmptyStrings(unittest.TestCase):
