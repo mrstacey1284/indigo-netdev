@@ -65,8 +65,7 @@ class Service(DeviceWrapper):
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
-        # to emit Indigo events, logger must be a child of 'Plugin'
-        self.logger = logging.getLogger('Plugin.DeviceWrapper_Service')
+        self.logger = logging.getLogger('Plugin.wrapper.Service')
 
         address = device.pluginProps['address']
         port = int(device.pluginProps['port'])
@@ -87,8 +86,7 @@ class Ping(DeviceWrapper):
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
-        # to emit Indigo events, logger must be a child of 'Plugin'
-        self.logger = logging.getLogger('Plugin.DeviceWrapper_Ping')
+        self.logger = logging.getLogger('Plugin.wrapper.Ping')
 
         address = device.pluginProps['address']
 
@@ -106,8 +104,7 @@ class HTTP(DeviceWrapper):
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
-        # to emit Indigo events, logger must be a child of 'Plugin'
-        self.logger = logging.getLogger('Plugin.DeviceWrapper_HTTP')
+        self.logger = logging.getLogger('Plugin.wrapper.HTTP')
 
         url = device.pluginProps['url']
 
@@ -131,8 +128,7 @@ class Local(DeviceWrapper):
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
-        # to emit Indigo events, logger must be a child of 'Plugin'
-        self.logger = logging.getLogger('Plugin.DeviceWrapper_Local')
+        self.logger = logging.getLogger('Plugin.wrapper.Local')
 
         address = device.pluginProps['address']
 
@@ -150,8 +146,7 @@ class SSH(RelayDeviceWrapper):
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
-        # to emit Indigo events, logger must be a child of 'Plugin'
-        self.logger = logging.getLogger('Plugin.DeviceWrapper_SSH')
+        self.logger = logging.getLogger('Plugin.wrapper.SSH')
 
         address = device.pluginProps['address']
         port = int(device.pluginProps['port'])
@@ -192,8 +187,7 @@ class macOS(RelayDeviceWrapper):
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
-        # to emit Indigo events, logger must be a child of 'Plugin'
-        self.logger = logging.getLogger('Plugin.DeviceWrapper_macOS')
+        self.logger = logging.getLogger('Plugin.wrapper.macOS')
 
         address = device.pluginProps['address']
         uname = device.pluginProps.get('username', None)

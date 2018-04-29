@@ -12,8 +12,7 @@ class ClientBase():
 
     #---------------------------------------------------------------------------
     def __init__(self):
-        # to emit Indigo events, logger must be a child of 'Plugin'
-        self.logger = logging.getLogger('Plugin.ClientBase')
+        self.logger = logging.getLogger('Plugin.client.ClientBase')
         self.execLock = threading.Lock()
 
     #---------------------------------------------------------------------------
@@ -53,7 +52,7 @@ class LocalCommand(ClientBase):
     #---------------------------------------------------------------------------
     def __init__(self, statusCommand='/usr/bin/true'):
         ClientBase.__init__(self)
-        self.logger = logging.getLogger('Plugin.LocalCommand')
+        self.logger = logging.getLogger('Plugin.client.LocalCommand')
 
         self.statusCommand = statusCommand
 
@@ -74,7 +73,7 @@ class ServiceClient(ClientBase):
     #---------------------------------------------------------------------------
     def __init__(self, address, port):
         ClientBase.__init__(self)
-        self.logger = logging.getLogger('Plugin.ServiceClient')
+        self.logger = logging.getLogger('Plugin.client.ServiceClient')
 
         self.address = address
         self.port = port
@@ -101,7 +100,7 @@ class PingClient(ClientBase):
     #---------------------------------------------------------------------------
     def __init__(self, address):
         ClientBase.__init__(self)
-        self.logger = logging.getLogger('Plugin.PingClient')
+        self.logger = logging.getLogger('Plugin.client.PingClient')
         self.address = address
 
     #---------------------------------------------------------------------------
@@ -120,7 +119,7 @@ class HttpClient(ClientBase):
     #---------------------------------------------------------------------------
     def __init__(self, url):
         ClientBase.__init__(self)
-        self.logger = logging.getLogger('Plugin.HttpClient')
+        self.logger = logging.getLogger('Plugin.client.HttpClient')
         self.url = url
 
     #---------------------------------------------------------------------------
@@ -157,7 +156,7 @@ class SSHClient(ServiceClient):
     #---------------------------------------------------------------------------
     def __init__(self, address, port=22, username=None, password=None):
         ServiceClient.__init__(self, address, port)
-        self.logger = logging.getLogger('Plugin.SSHClient')
+        self.logger = logging.getLogger('Plugin.client.SSHClient')
 
         self.commands = dict()
         self.username = username
