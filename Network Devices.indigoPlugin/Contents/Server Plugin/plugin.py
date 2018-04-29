@@ -218,26 +218,12 @@ class Plugin(indigo.PluginBase):
             pass
 
 ################################################################################
-# plugin device wrapper for Network Service devices
-class NetworkServiceDevice():
+# device wrapper for plugin objects
+class DeviceWrapper():
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
-        # to emit Indigo events, logger must be a child of 'Plugin'
-        self.logger = logging.getLogger('Plugin.NetworkServiceDevice')
-
-        address = device.pluginProps['address']
-        port = int(device.pluginProps['port'])
-        client = clients.ServiceClient(address, port)
-
-        self.device = device
-        self.client = client
-
-    #---------------------------------------------------------------------------
-    @staticmethod
-    def validateConfig(values, errors):
-        validateConfig_String('address', values, errors, emptyOk=False)
-        validateConfig_Int('port', values, errors, min=1, max=65536)
+        raise NotImplementedError()
 
     #---------------------------------------------------------------------------
     # sub-classes should override this for their specific device states
@@ -254,52 +240,8 @@ class NetworkServiceDevice():
             device.updateStateOnServer('status', 'Inactive')
 
 ################################################################################
-# plugin device wrapper for Ping Status devices
-class NetworkServiceDevice_Ping(NetworkServiceDevice):
-
-    #---------------------------------------------------------------------------
-    def __init__(self, device):
-        # to emit Indigo events, logger must be a child of 'Plugin'
-        self.logger = logging.getLogger('Plugin.NetworkServiceDevice_Ping')
-
-        address = device.pluginProps['address']
-
-        self.device = device
-        self.client = clients.PingClient(address)
-
-    #---------------------------------------------------------------------------
-    @staticmethod
-    def validateConfig(values, errors):
-        validateConfig_String('address', values, errors, emptyOk=False)
-
-################################################################################
-# plugin device wrapper for HTTP Status devices
-class NetworkServiceDevice_HTTP(NetworkServiceDevice):
-
-    #---------------------------------------------------------------------------
-    def __init__(self, device):
-        # to emit Indigo events, logger must be a child of 'Plugin'
-        self.logger = logging.getLogger('Plugin.NetworkServiceDevice_HTTP')
-
-        url = device.pluginProps['url']
-
-        self.device = device
-        self.client = clients.HttpClient(url)
-
-    #---------------------------------------------------------------------------
-    @staticmethod
-    def validateConfig(values, errors):
-        validateConfig_String('url', values, errors, emptyOk=False)
-
-        # update 'address' for proper display
-        url = values['url']
-        req = urllib2.Request(url)
-
-        values['address'] = req.get_host()
-
-################################################################################
-# base class device wrapper for relay-type devices
-class NetworkRelayDevice(NetworkServiceDevice):
+# base wrapper class for relay-type devices
+class RelayDeviceWrapper(DeviceWrapper):
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
@@ -328,8 +270,74 @@ class NetworkRelayDevice(NetworkServiceDevice):
             device.updateStateOnServer('onOffState', 'off')
 
 ################################################################################
+# plugin device wrapper for Network Service devices
+class NetworkServiceDevice(DeviceWrapper):
+
+    #---------------------------------------------------------------------------
+    def __init__(self, device):
+        # to emit Indigo events, logger must be a child of 'Plugin'
+        self.logger = logging.getLogger('Plugin.NetworkServiceDevice')
+
+        address = device.pluginProps['address']
+        port = int(device.pluginProps['port'])
+        client = clients.ServiceClient(address, port)
+
+        self.device = device
+        self.client = client
+
+    #---------------------------------------------------------------------------
+    @staticmethod
+    def validateConfig(values, errors):
+        validateConfig_String('address', values, errors, emptyOk=False)
+        validateConfig_Int('port', values, errors, min=1, max=65536)
+
+################################################################################
+# plugin device wrapper for Ping Status devices
+class NetworkServiceDevice_Ping(DeviceWrapper):
+
+    #---------------------------------------------------------------------------
+    def __init__(self, device):
+        # to emit Indigo events, logger must be a child of 'Plugin'
+        self.logger = logging.getLogger('Plugin.NetworkServiceDevice_Ping')
+
+        address = device.pluginProps['address']
+
+        self.device = device
+        self.client = clients.PingClient(address)
+
+    #---------------------------------------------------------------------------
+    @staticmethod
+    def validateConfig(values, errors):
+        validateConfig_String('address', values, errors, emptyOk=False)
+
+################################################################################
+# plugin device wrapper for HTTP Status devices
+class NetworkServiceDevice_HTTP(DeviceWrapper):
+
+    #---------------------------------------------------------------------------
+    def __init__(self, device):
+        # to emit Indigo events, logger must be a child of 'Plugin'
+        self.logger = logging.getLogger('Plugin.NetworkServiceDevice_HTTP')
+
+        url = device.pluginProps['url']
+
+        self.device = device
+        self.client = clients.HttpClient(url)
+
+    #---------------------------------------------------------------------------
+    @staticmethod
+    def validateConfig(values, errors):
+        validateConfig_String('url', values, errors, emptyOk=False)
+
+        # update 'address' for proper display
+        url = values['url']
+        req = urllib2.Request(url)
+
+        values['address'] = req.get_host()
+
+################################################################################
 # plugin device wrapper for SSH Device types
-class NetworkRelayDevice_SSH(NetworkRelayDevice):
+class NetworkRelayDevice_SSH(RelayDeviceWrapper):
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
@@ -364,7 +372,7 @@ class NetworkRelayDevice_SSH(NetworkRelayDevice):
 
 ################################################################################
 # plugin device wrapper for Telnet Device types
-class NetworkRelayDevice_Telnet(NetworkRelayDevice):
+class NetworkRelayDevice_Telnet(RelayDeviceWrapper):
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
@@ -379,7 +387,7 @@ class NetworkRelayDevice_Telnet(NetworkRelayDevice):
 
 ################################################################################
 # plugin device wrapper for macOS Device types
-class NetworkRelayDevice_macOS(NetworkRelayDevice_SSH):
+class NetworkRelayDevice_macOS(RelayDeviceWrapper):
 
     # XXX could we use remote management instead of SSH?
 
