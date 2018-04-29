@@ -4,4 +4,8 @@
     <Name>Refresh All Devices</Name>
     <CallbackMethod>refreshAllDevices</CallbackMethod>
   </MenuItem>
+  <MenuItem id="rebuildArpCache">
+    <Name>Rebuild ARP Cache</Name>
+    <CallbackMethod>rebuildArpCache</CallbackMethod>
+  </MenuItem>
 </MenuItems>

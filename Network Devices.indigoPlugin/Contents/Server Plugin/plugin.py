@@ -3,6 +3,7 @@
 import logging
 import socket
 import urllib2
+import subprocess
 
 import clients
 
@@ -49,6 +50,7 @@ def validateConfig_Int(key, values, errors, min=None, max=None):
 class Plugin(indigo.PluginBase):
 
     objects = dict()
+    arp_cache = None
 
     #---------------------------------------------------------------------------
     def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
@@ -65,6 +67,32 @@ class Plugin(indigo.PluginBase):
         for id in self.objects:
             obj = self.objects[id]
             obj.updateStatus()
+
+    #---------------------------------------------------------------------------
+    def rebuildArpCache(self):
+        # TODO limit concurrent calls to arp - abort if already running
+
+        cmd = ['/usr/sbin/arp', '-a']
+
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        pout, perr = proc.communicate()
+
+        cache = [ ]
+
+        # translate command output to cache entries
+        for line in pout.splitlines():
+            parts = line.split()
+            entry = {
+                'hostname': None,
+                'ip_addr': parts[0],
+                'eth_addr': parts[3].upper(),
+                'iface': parts[5]
+            }
+
+            cache.append(entry)
+            self.logger.debug('ARP: ' + str(entry))
+
+        self.arp_cache = cache
 
     #---------------------------------------------------------------------------
     def validatePrefsConfigUi(self, values):
@@ -173,6 +201,7 @@ class Plugin(indigo.PluginBase):
 
     #---------------------------------------------------------------------------
     def _runLoopStep(self):
+        #TODO self.rebuildArpCache()
         self.refreshAllDevices()
 
         # sleep for the configured timeout
@@ -234,6 +263,7 @@ class DeviceWrapper():
             self.logger.debug(u'%s is AVAILABLE', device.name)
             device.updateStateOnServer('active', True)
             device.updateStateOnServer('status', 'Active')
+
         else:
             self.logger.debug(u'%s is UNAVAILABLE', device.name)
             device.updateStateOnServer('active', False)
@@ -347,6 +377,7 @@ class DeviceWrapper_Local(DeviceWrapper):
         address = device.pluginProps['address']
 
         self.device = device
+        self.client = clients.NullClient()
 
     #---------------------------------------------------------------------------
     @staticmethod
