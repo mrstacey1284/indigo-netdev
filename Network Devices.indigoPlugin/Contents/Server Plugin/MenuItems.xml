@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<MenuItems>
+  <MenuItem id="refreshAllDevices">
+    <Name>Refresh All Devices</Name>
+    <CallbackMethod>refreshAllDevices</CallbackMethod>
+  </MenuItem>
+</MenuItems>
