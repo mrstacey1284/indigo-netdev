@@ -80,17 +80,15 @@ class Plugin(indigo.PluginBase):
         errors = indigo.Dict()
 
         if typeId == 'service':
-            NetworkServiceDevice.validateConfig(values, errors)
+            DeviceWrapper_Service.validateConfig(values, errors)
         elif typeId == 'ping':
-            NetworkServiceDevice_Ping.validateConfig(values, errors)
+            DeviceWrapper_Ping.validateConfig(values, errors)
         elif typeId == 'http':
-            NetworkServiceDevice_HTTP.validateConfig(values, errors)
+            DeviceWrapper_HTTP.validateConfig(values, errors)
         elif typeId == 'ssh':
-            NetworkRelayDevice_SSH.validateConfig(values, errors)
-        elif typeId == 'telnet':
-            NetworkRelayDevice_Telnet.validateConfig(values, errors)
+            DeviceWrapper_SSH.validateConfig(values, errors)
         elif typeId == 'macos':
-            NetworkRelayDevice_macOS.validateConfig(values, errors)
+            DeviceWrapper_macOS.validateConfig(values, errors)
 
         return ((len(errors) == 0), values, errors)
 
@@ -108,17 +106,15 @@ class Plugin(indigo.PluginBase):
         obj = None
 
         if typeId == 'service':
-            obj = NetworkServiceDevice(device)
+            obj = DeviceWrapper_Service(device)
         elif typeId == 'ping':
-            obj = NetworkServiceDevice_Ping(device)
+            obj = DeviceWrapper_Ping(device)
         elif typeId == 'http':
-            obj = NetworkServiceDevice_HTTP(device)
+            obj = DeviceWrapper_HTTP(device)
         elif typeId == 'ssh':
-            obj = NetworkRelayDevice_SSH(device)
-        elif typeId == 'telnet':
-            obj = NetworkRelayDevice_Telnet(device)
+            obj = DeviceWrapper_SSH(device)
         elif typeId == 'macos':
-            obj = NetworkRelayDevice_macOS(device)
+            obj = DeviceWrapper_macOS(device)
         else:
             self.logger.error(u'unknown device type: %s', typeId)
 
@@ -271,12 +267,12 @@ class RelayDeviceWrapper(DeviceWrapper):
 
 ################################################################################
 # plugin device wrapper for Network Service devices
-class NetworkServiceDevice(DeviceWrapper):
+class DeviceWrapper_Service(DeviceWrapper):
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
         # to emit Indigo events, logger must be a child of 'Plugin'
-        self.logger = logging.getLogger('Plugin.NetworkServiceDevice')
+        self.logger = logging.getLogger('Plugin.DeviceWrapper_Service')
 
         address = device.pluginProps['address']
         port = int(device.pluginProps['port'])
@@ -293,12 +289,12 @@ class NetworkServiceDevice(DeviceWrapper):
 
 ################################################################################
 # plugin device wrapper for Ping Status devices
-class NetworkServiceDevice_Ping(DeviceWrapper):
+class DeviceWrapper_Ping(DeviceWrapper):
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
         # to emit Indigo events, logger must be a child of 'Plugin'
-        self.logger = logging.getLogger('Plugin.NetworkServiceDevice_Ping')
+        self.logger = logging.getLogger('Plugin.DeviceWrapper_Ping')
 
         address = device.pluginProps['address']
 
@@ -312,12 +308,12 @@ class NetworkServiceDevice_Ping(DeviceWrapper):
 
 ################################################################################
 # plugin device wrapper for HTTP Status devices
-class NetworkServiceDevice_HTTP(DeviceWrapper):
+class DeviceWrapper_HTTP(DeviceWrapper):
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
         # to emit Indigo events, logger must be a child of 'Plugin'
-        self.logger = logging.getLogger('Plugin.NetworkServiceDevice_HTTP')
+        self.logger = logging.getLogger('Plugin.DeviceWrapper_HTTP')
 
         url = device.pluginProps['url']
 
@@ -337,12 +333,12 @@ class NetworkServiceDevice_HTTP(DeviceWrapper):
 
 ################################################################################
 # plugin device wrapper for SSH Device types
-class NetworkRelayDevice_SSH(RelayDeviceWrapper):
+class DeviceWrapper_SSH(RelayDeviceWrapper):
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
         # to emit Indigo events, logger must be a child of 'Plugin'
-        self.logger = logging.getLogger('Plugin.NetworkRelayDevice_SSH')
+        self.logger = logging.getLogger('Plugin.DeviceWrapper_SSH')
 
         address = device.pluginProps['address']
         port = int(device.pluginProps['port'])
@@ -358,7 +354,7 @@ class NetworkRelayDevice_SSH(RelayDeviceWrapper):
     #---------------------------------------------------------------------------
     @staticmethod
     def validateConfig(values, errors):
-        NetworkServiceDevice.validateConfig(values, errors)
+        DeviceWrapper_Service.validateConfig(values, errors)
         validateConfig_String('cmd_status', values, errors, emptyOk=False)
         validateConfig_String('cmd_shutdown', values, errors, emptyOk=False)
 
@@ -371,30 +367,15 @@ class NetworkRelayDevice_SSH(RelayDeviceWrapper):
             self.logger.error(u'Could not turn off remote server: %s', device.name)
 
 ################################################################################
-# plugin device wrapper for Telnet Device types
-class NetworkRelayDevice_Telnet(RelayDeviceWrapper):
-
-    #---------------------------------------------------------------------------
-    def __init__(self, device):
-        # to emit Indigo events, logger must be a child of 'Plugin'
-        self.logger = logging.getLogger('Plugin.NetworkRelayDevice_Telnet')
-
-        address = device.pluginProps['address']
-        uname = device.pluginProps.get('username', None)
-        passwd = device.pluginProps.get('password', None)
-
-        self.device = device
-
-################################################################################
 # plugin device wrapper for macOS Device types
-class NetworkRelayDevice_macOS(RelayDeviceWrapper):
+class DeviceWrapper_macOS(RelayDeviceWrapper):
 
     # XXX could we use remote management instead of SSH?
 
     #---------------------------------------------------------------------------
     def __init__(self, device):
         # to emit Indigo events, logger must be a child of 'Plugin'
-        self.logger = logging.getLogger('Plugin.NetworkRelayDevice_macOS')
+        self.logger = logging.getLogger('Plugin.DeviceWrapper_macOS')
 
         address = device.pluginProps['address']
         uname = device.pluginProps.get('username', None)
