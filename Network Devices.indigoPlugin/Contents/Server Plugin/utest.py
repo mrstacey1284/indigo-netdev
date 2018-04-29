@@ -50,6 +50,14 @@ class HttpStatusChecks(unittest.TestCase):
         self.assertTrue(available)
 
     #---------------------------------------------------------------------------
+    def test_Http301(self):
+        client = clients.HttpClient('https://httpstat.us/301')
+        available = client.isAvailable()
+
+        # the python client should process the redirect to a "success" status
+        self.assertTrue(available)
+
+    #---------------------------------------------------------------------------
     def test_Http404(self):
         client = clients.HttpClient('https://httpstat.us/404')
         available = client.isAvailable()
