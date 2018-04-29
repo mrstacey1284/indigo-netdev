@@ -81,19 +81,14 @@ class Plugin(indigo.PluginBase):
 
         if typeId == 'service':
             NetworkServiceDevice.validateConfig(values, errors)
-
         elif typeId == 'ping':
             NetworkServiceDevice_Ping.validateConfig(values, errors)
-
         elif typeId == 'http':
             NetworkServiceDevice_HTTP.validateConfig(values, errors)
-
         elif typeId == 'ssh':
             NetworkRelayDevice_SSH.validateConfig(values, errors)
-
         elif typeId == 'telnet':
             NetworkRelayDevice_Telnet.validateConfig(values, errors)
-
         elif typeId == 'macos':
             NetworkRelayDevice_macOS.validateConfig(values, errors)
 
@@ -127,8 +122,7 @@ class Plugin(indigo.PluginBase):
         else:
             self.logger.error(u'unknown device type: %s', typeId)
 
-        if obj is not None:
-            self.objects[device.id] = obj
+        self.objects[device.id] = obj
 
     #---------------------------------------------------------------------------
     def deviceStopComm(self, device):

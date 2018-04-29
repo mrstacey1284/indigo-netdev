@@ -128,8 +128,10 @@ class HttpClient(ClientBase):
             # XXX how are redirects handled?
 
         except Exception as e:
-            self.logger.error(str(e))
+            self.logger.warn(str(e))
             available = False
+
+        # XXX maybe we want to return None (Error) for 5xx codes?
 
         return available
 
