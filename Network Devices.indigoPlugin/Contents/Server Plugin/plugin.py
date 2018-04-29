@@ -218,7 +218,7 @@ class Plugin(indigo.PluginBase):
             pass
 
 ################################################################################
-# a generic service running on a specific port
+# plugin device wrapper for Network Service devices
 class NetworkServiceDevice():
 
     #---------------------------------------------------------------------------
@@ -254,7 +254,7 @@ class NetworkServiceDevice():
             device.updateStateOnServer('status', 'Inactive')
 
 ################################################################################
-# verify ping responses from a target address
+# plugin device wrapper for Ping Status devices
 class NetworkServiceDevice_Ping(NetworkServiceDevice):
 
     #---------------------------------------------------------------------------
@@ -273,7 +273,7 @@ class NetworkServiceDevice_Ping(NetworkServiceDevice):
         validateConfig_String('address', values, errors, emptyOk=False)
 
 ################################################################################
-# verify http status from a given URL
+# plugin device wrapper for HTTP Status devices
 class NetworkServiceDevice_HTTP(NetworkServiceDevice):
 
     #---------------------------------------------------------------------------
@@ -298,7 +298,7 @@ class NetworkServiceDevice_HTTP(NetworkServiceDevice):
         values['address'] = req.get_host()
 
 ################################################################################
-# a network service that supports on / off state (relay device)
+# base class device wrapper for relay-type devices
 class NetworkRelayDevice(NetworkServiceDevice):
 
     #---------------------------------------------------------------------------
@@ -328,6 +328,7 @@ class NetworkRelayDevice(NetworkServiceDevice):
             device.updateStateOnServer('onOffState', 'off')
 
 ################################################################################
+# plugin device wrapper for SSH Device types
 class NetworkRelayDevice_SSH(NetworkRelayDevice):
 
     #---------------------------------------------------------------------------
@@ -362,6 +363,7 @@ class NetworkRelayDevice_SSH(NetworkRelayDevice):
             self.logger.error(u'Could not turn off remote server: %s', device.name)
 
 ################################################################################
+# plugin device wrapper for Telnet Device types
 class NetworkRelayDevice_Telnet(NetworkRelayDevice):
 
     #---------------------------------------------------------------------------
@@ -376,6 +378,7 @@ class NetworkRelayDevice_Telnet(NetworkRelayDevice):
         self.device = device
 
 ################################################################################
+# plugin device wrapper for macOS Device types
 class NetworkRelayDevice_macOS(NetworkRelayDevice_SSH):
 
     # XXX could we use remote management instead of SSH?
