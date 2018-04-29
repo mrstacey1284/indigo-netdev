@@ -4,6 +4,7 @@ import logging
 import urllib2
 
 import clients
+import utils
 
 ################################################################################
 # wrapper base class for device types
@@ -77,8 +78,8 @@ class Service(DeviceWrapper):
     #---------------------------------------------------------------------------
     @staticmethod
     def validateConfig(values, errors):
-        validateConfig_String('address', values, errors, emptyOk=False)
-        validateConfig_Int('port', values, errors, min=1, max=65536)
+        utils.validateConfig_Hostname('address', values, errors, emptyOk=False)
+        utils.validateConfig_Int('port', values, errors, min=1, max=65536)
 
 ################################################################################
 # plugin device wrapper for Ping Status devices
@@ -97,7 +98,7 @@ class Ping(DeviceWrapper):
     #---------------------------------------------------------------------------
     @staticmethod
     def validateConfig(values, errors):
-        validateConfig_String('address', values, errors, emptyOk=False)
+        utils.validateConfig_Hostname('address', values, errors, emptyOk=False)
 
 ################################################################################
 # plugin device wrapper for HTTP Status devices
@@ -116,7 +117,7 @@ class HTTP(DeviceWrapper):
     #---------------------------------------------------------------------------
     @staticmethod
     def validateConfig(values, errors):
-        validateConfig_String('url', values, errors, emptyOk=False)
+        utils.validateConfig_URL('url', values, errors, emptyOk=False)
 
         # update 'address' for proper display
         url = values['url']
@@ -141,7 +142,7 @@ class Local(DeviceWrapper):
     #---------------------------------------------------------------------------
     @staticmethod
     def validateConfig(values, errors):
-        validateConfig_String('address', values, errors, emptyOk=False)
+        utils.validateConfig_MAC('address', values, errors, emptyOk=False)
 
 ################################################################################
 # plugin device wrapper for SSH Device types
@@ -166,9 +167,14 @@ class SSH(RelayDeviceWrapper):
     #---------------------------------------------------------------------------
     @staticmethod
     def validateConfig(values, errors):
-        DeviceWrapper_Service.validateConfig(values, errors)
-        validateConfig_String('cmd_status', values, errors, emptyOk=False)
-        validateConfig_String('cmd_shutdown', values, errors, emptyOk=False)
+        utils.validateConfig_Hostname('address', values, errors, emptyOk=False)
+        utils.validateConfig_Int('port', values, errors, min=1, max=65536)
+
+        utils.validateConfig_String('username', values, errors, emptyOk=False)
+        #utils.validateConfig_String('password', values, errors, emptyOk=True)
+
+        utils.validateConfig_String('cmd_status', values, errors, emptyOk=False)
+        utils.validateConfig_String('cmd_shutdown', values, errors, emptyOk=False)
 
     #---------------------------------------------------------------------------
     def turnOff(self):
@@ -204,5 +210,7 @@ class macOS(RelayDeviceWrapper):
     #---------------------------------------------------------------------------
     @staticmethod
     def validateConfig(values, errors):
-        validateConfig_String('address', values, errors, emptyOk=False)
+        utils.validateConfig_Hostname('address', values, errors, emptyOk=False)
+        utils.validateConfig_String('username', values, errors, emptyOk=False)
+        #utils.validateConfig_String('password', values, errors, emptyOk=True)
 
