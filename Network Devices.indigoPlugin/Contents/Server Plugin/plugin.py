@@ -19,8 +19,6 @@ class Plugin(indigo.PluginBase):
         indigo.PluginBase.__init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs)
         self._loadPluginPrefs(pluginPrefs)
 
-        self.arp_cache = arp.ArpCache()
-
     #---------------------------------------------------------------------------
     def __del__(self):
         indigo.PluginBase.__del__(self)
@@ -146,6 +144,9 @@ class Plugin(indigo.PluginBase):
         else:
             self.refreshInterval = int(refreshVal)
         self.logger.debug(u'{refreshInterval} - %d seconds', self.refreshInterval)
+
+        # TODO add user-defined arp timeout
+        self.arp_cache = arp.ArpCache()
 
     #---------------------------------------------------------------------------
     def _runLoopStep(self):

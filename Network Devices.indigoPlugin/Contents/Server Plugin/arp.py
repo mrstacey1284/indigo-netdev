@@ -1,11 +1,12 @@
 # for managing a local arp cache
 
+import time
 import logging
 import subprocess
 import threading
 
 # TODO add some unit tests for parsing arp command output
-# TODO add "expiration" or "last seen" timestamps to entries
+# TODO support a user-defined timeout for entries
 
 ################################################################################
 class ArpCache():
@@ -14,12 +15,19 @@ class ArpCache():
     cache = dict()
 
     #---------------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, timeout=300):
         self.logger = logging.getLogger('Plugin.arp.ArpCache')
         self.lock = threading.Lock()
+        self.timeout = timeout
 
     #---------------------------------------------------------------------------
     def rebuildArpCache(self):
+        # XXX it would be nice to lock these in a mutex...
+        self.updateCurrentDevices()
+        self.expireOldDevices()
+
+    #---------------------------------------------------------------------------
+    def updateCurrentDevices(self):
         # TODO limit concurrent calls to arp - abort if already running
 
         cmd = ['/usr/sbin/arp', '-a']
@@ -27,34 +35,41 @@ class ArpCache():
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         pout, perr = proc.communicate()
 
-        cache = [ ]
+        self.lock.acquire()
 
         # translate command output to cache entries
         for line in pout.splitlines():
             parts = line.split()
-            entry = {
-                'ip_addr': parts[0],
-                'eth_addr': parts[3].upper(),
-                'iface': parts[5]
-            }
+            addr = parts[3].upper()
 
-            cache.append(entry)
-            self.logger.debug('ARP: ' + str(entry))
+            # TODO look for valid addresses only
 
-        self.cache = cache
+            self.cache[addr] = time.clock()
+            self.logger.debug('device found: %s', addr)
+
+        self.lock.release()
 
     #---------------------------------------------------------------------------
-    def getEntryByHardwareAddr(self, address):
-        addr = address.upper()
+    def expireOldDevices(self):
+        expired = list()
 
-        for entry in self.cache:
-            if entry['eth_addr'] == addr:
-                return entry
+        now = time.clock()
+        self.lock.acquire()
 
-        return None
+        # first, find all the expired keys
+        for addr, last_seen in self.cache.items():
+            if now - last_seen >= self.timeout:
+                expired.append(addr)
+
+        # now, delete the expired addresses
+        for addr in expired:
+            self.logger.debug('device expired: %s', addr)
+            del self.cache[addr]
+
+        self.lock.release()
 
     #---------------------------------------------------------------------------
     def isActiveHardwareAddr(self, address):
-        found = self.getEntryByHardwareAddr(address)
-        return (found is not None)
+        addr = address.upper()
+        return (addr in self.cache)
 
