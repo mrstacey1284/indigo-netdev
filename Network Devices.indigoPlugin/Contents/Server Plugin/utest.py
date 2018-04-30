@@ -88,176 +88,216 @@ class LocalHostSSH(unittest.TestCase):
 class ValidateIntegers(unittest.TestCase):
 
     #---------------------------------------------------------------------------
-    def setUp(self):
-        self.values = dict()
-        self.values['zero'] = 0
-        self.values['small'] = 1
-        self.values['big'] = 100000000000
-        self.values['negative'] = -1
-        self.values['NaN'] = 'NaN'
+    def assertError(self, value, min=None, max=None):
+        values = { 'address' : value }
 
-    #---------------------------------------------------------------------------
-    def test_AllOk(self):
         errors = dict()
 
-        utils.validateConfig_Int('zero', self.values, errors)
-        self.assertNotIn('zero', errors)
-
-        utils.validateConfig_Int('negative', self.values, errors)
-        self.assertNotIn('negative', errors)
-
-        utils.validateConfig_Int('small', self.values, errors)
-        self.assertNotIn('small', errors)
-
-        utils.validateConfig_Int('big', self.values, errors)
-        self.assertNotIn('big', errors)
+        utils.validateConfig_Int('address', values, errors, min=min, max=max)
+        self.assertIn('address', errors)
 
     #---------------------------------------------------------------------------
-    def test_ZeroOk(self):
+    def assertNoError(self, value, min=None, max=None):
+        values = { 'address' : value }
+
         errors = dict()
 
-        utils.validateConfig_Int('zero', self.values, errors)
-        self.assertNotIn('zero', errors)
-
-    #---------------------------------------------------------------------------
-    def test_BoundedZeroOk(self):
-        errors = dict()
-
-        utils.validateConfig_Int('zero', self.values, errors, min=-1, max=1)
-        self.assertNotIn('zero', errors)
+        utils.validateConfig_Int('address', values, errors, min=min, max=max)
+        self.assertNotIn('address', errors)
 
     #---------------------------------------------------------------------------
     def test_ZeroOnlyOk(self):
-        errors = dict()
-
-        utils.validateConfig_Int('zero', self.values, errors, min=0, max=0)
-        self.assertNotIn('zero', errors)
-
-    #---------------------------------------------------------------------------
-    def test_ZeroNotOk(self):
-        errors = dict()
-
-        utils.validateConfig_Int('zero', self.values, errors, min=1, max=1)
-        self.assertIn('zero', errors)
+        self.assertNoError(0, min=0, max=0)
 
     #---------------------------------------------------------------------------
     def test_NaN(self):
-        errors = dict()
-
-        utils.validateConfig_Int('NaN', self.values, errors)
-        self.assertIn('NaN', errors)
+        self.assertError('NaN')
 
     #---------------------------------------------------------------------------
-    def test_SmallNumberOk(self):
-        errors = dict()
-
-        utils.validateConfig_Int('small', self.values, errors, min=0, max=1)
-        self.assertNotIn('small', errors)
-
-    #---------------------------------------------------------------------------
-    def test_SmallNumberNotOk(self):
-        errors = dict()
-
-        utils.validateConfig_Int('small', self.values, errors, min=2)
-        self.assertIn('small', errors)
+    def test_AnyNumbersOkay(self):
+        self.assertNoError(0)
+        self.assertNoError(1)
+        self.assertNoError(1234567890)
+        self.assertNoError(9876543210)
 
     #---------------------------------------------------------------------------
-    def test_BigNumberOk(self):
-        errors = dict()
-
-        utils.validateConfig_Int('big', self.values, errors, min=1)
-        self.assertNotIn('big', errors)
+    def test_NumbersInRange(self):
+        self.assertNoError(0, min=-1, max=1)
+        self.assertNoError(5, min=1, max=10)
 
     #---------------------------------------------------------------------------
-    def test_BigNumberNotOk(self):
-        errors = dict()
-
-        utils.validateConfig_Int('big', self.values, errors, min=0, max=0)
-        self.assertIn('big', errors)
+    def test_NumbersOutOfRange(self):
+        self.assertError(0, min=1, max=10)
 
     #---------------------------------------------------------------------------
-    def test_NegativeOk(self):
-        errors = dict()
-
-        utils.validateConfig_Int('negative', self.values, errors, max=0)
-        self.assertNotIn('negative', errors)
+    def test_PartialRangeOk(self):
+        self.assertNoError(0, max=1)
+        self.assertNoError(1234567890, min=1)
 
     #---------------------------------------------------------------------------
-    def test_NegativeNotOk(self):
-        errors = dict()
+    def test_PartialRangeNotOk(self):
+        self.assertError(0, min=1)
+        self.assertError(1, max=0)
+        self.assertError(1234567890, max=0)
 
-        utils.validateConfig_Int('negative', self.values, errors, min=0)
-        self.assertIn('negative', errors)
+    #---------------------------------------------------------------------------
+    def test_NegativesOk(self):
+        self.assertNoError(-1)
+        self.assertNoError(-1, max=0)
+
+    #---------------------------------------------------------------------------
+    def test_NegativesNotOk(self):
+        self.assertError(-1, min=0)
 
 ################################################################################
-class ValidateEmptyStrings(unittest.TestCase):
+class ValidateStrings(unittest.TestCase):
 
     #---------------------------------------------------------------------------
-    def setUp(self):
-        self.values = dict()
-        self.values['empty'] = ''
-        self.values['none'] = None
+    def assertError(self, value, emptyOk=False):
+        values = { 'address' : value }
 
-    #---------------------------------------------------------------------------
-    def test_EmptyStringOk(self):
         errors = dict()
 
-        utils.validateConfig_String('empty', self.values, errors, emptyOk=True)
-        self.assertNotIn('empty', errors)
+        utils.validateConfig_String('address', values, errors, emptyOk=emptyOk)
+        self.assertIn('address', errors)
 
     #---------------------------------------------------------------------------
-    def test_EmptyStringNotOk(self):
+    def assertNoError(self, value, emptyOk=False):
+        values = { 'address' : value }
+
         errors = dict()
 
-        utils.validateConfig_String('empty', self.values, errors, emptyOk=False)
-        self.assertIn('empty', errors)
+        utils.validateConfig_String('address', values, errors, emptyOk=emptyOk)
+        self.assertNotIn('address', errors)
 
     #---------------------------------------------------------------------------
-    def test_NoneStringOk(self):
-        errors = dict()
-
-        utils.validateConfig_String('none', self.values, errors, emptyOk=True)
-        self.assertNotIn('none', errors)
+    def test_EmptyString(self):
+        self.assertError('')
+        self.assertNoError('', emptyOk=True)
 
     #---------------------------------------------------------------------------
-    def test_NoneStringNotOk(self):
-        errors = dict()
-
-        utils.validateConfig_String('none', self.values, errors, emptyOk=False)
-        self.assertIn('none', errors)
-
-################################################################################
-class ValidateRegularStrings(unittest.TestCase):
-
-    #---------------------------------------------------------------------------
-    def setUp(self):
-        self.values = dict()
-        self.values['basic'] = 'this is a simple string'
-        self.values['complex'] = 'TODO make a complex string'
-        self.values['numeric'] = '0123456789'
-        self.values['mixed'] = 'string with numbers: 42 and symbols: %%^ for fun'
-        self.values['unicode'] = u'TODO make a unicode string'
+    def test_NoneString(self):
+        self.assertError(None)
+        self.assertError(None, emptyOk=True)
 
     #---------------------------------------------------------------------------
     def test_MissingString(self):
+        values = dict()
         errors = dict()
 
-        utils.validateConfig_String('_missing_', self.values, errors, emptyOk=False)
-        self.assertIn('_missing_', errors)
+        utils.validateConfig_String('undef', values, errors)
+        self.assertIn('undef', errors)
 
     #---------------------------------------------------------------------------
-    def _stdStringTest(self, key):
+    def test_BasicString(self):
+        self.assertNoError('this is a basic string')
+
+    #---------------------------------------------------------------------------
+    def test_NumericString(self):
+        self.assertNoError('42')
+        self.assertNoError('898234765')
+        self.assertNoError('897,654,321')
+        self.assertNoError('3.141592654')
+
+    #---------------------------------------------------------------------------
+    def test_MixedString(self):
+        self.assertNoError('p4$$w0RD')
+        self.assertNoError('a string with SYMBOLS (*!&@~) and NUMBERS (98,764) too!')
+
+    #---------------------------------------------------------------------------
+    def test_UnicodeString(self):
+        self.assertNoError(u'something in unicode pls')
+
+################################################################################
+class ValidateHostnames(unittest.TestCase):
+
+    #---------------------------------------------------------------------------
+    def assertError(self, value):
+        values = { 'address' : value }
+
         errors = dict()
 
-        utils.validateConfig_String(key, self.values, errors, emptyOk=False)
-        self.assertNotIn(key, errors)
+        utils.validateConfig_Hostname('address', values, errors)
+        self.assertIn('address', errors)
 
     #---------------------------------------------------------------------------
-    def test_BasicString(self): self._stdStringTest('basic')
-    def test_NumericString(self): self._stdStringTest('numeric')
-    def test_ComplexString(self): self._stdStringTest('complex')
-    def test_MixedString(self): self._stdStringTest('mixed')
-    def test_UnicodeString(self): self._stdStringTest('unicode')
+    def assertNoError(self, value):
+        values = { 'address' : value }
+
+        errors = dict()
+
+        utils.validateConfig_Hostname('address', values, errors)
+        self.assertNotIn('address', errors)
+
+    #---------------------------------------------------------------------------
+    def test_MissingHostname(self):
+        values = dict()
+        errors = dict()
+
+        utils.validateConfig_Hostname('undef', values, errors)
+        self.assertIn('undef', errors)
+
+    #---------------------------------------------------------------------------
+    def test_EmptyHostname(self):
+        self.assertError('')
+        self.assertError(None)
+
+    #---------------------------------------------------------------------------
+    def test_InvalidHostname(self):
+        self.assertError('bad+wolf')
+
+    #---------------------------------------------------------------------------
+    def test_BasicHostname(self):
+        self.assertNoError('www.google.com')
+        self.assertNoError('8.8.8.8')
+
+    #---------------------------------------------------------------------------
+    def test_Localhost(self):
+        self.assertNoError('localhost')
+        self.assertNoError('127.0.0.1')
+
+    #---------------------------------------------------------------------------
+    def test_URL(self):
+        self.assertError('http://www.google.com/')
+        self.assertError('http://www.google.com')
+
+    #---------------------------------------------------------------------------
+    def test_MacAddress(self):
+        self.assertError('8c:85:90:4f:7f:73')
+
+################################################################################
+class ValidateMacAddress(unittest.TestCase):
+
+    #---------------------------------------------------------------------------
+    def assertError(self, value):
+        values = { 'address' : value }
+
+        errors = dict()
+
+        utils.validateConfig_MAC('address', values, errors)
+        self.assertIn('address', errors)
+
+    #---------------------------------------------------------------------------
+    def assertNoError(self, value):
+        values = { 'address' : value }
+
+        errors = dict()
+
+        utils.validateConfig_MAC('address', values, errors)
+        self.assertNotIn('address', errors)
+
+    #---------------------------------------------------------------------------
+    def test_EmptyAddress(self):
+        self.assertError('')
+        self.assertError(None)
+
+    #---------------------------------------------------------------------------
+    def test_BasicAddress(self):
+        self.assertNoError('8c:85:90:4f:7f:73')
+
+    #---------------------------------------------------------------------------
+    def test_InvalidAddress(self):
+        self.assertError('8c:85:0:4f:7f:73')
 
 ################################################################################
 ## MAIN ENTRY
