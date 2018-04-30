@@ -303,10 +303,23 @@ class ValidateMacAddress(unittest.TestCase):
     #---------------------------------------------------------------------------
     def test_BasicAddress(self):
         self.assertNoError('8c:85:90:4f:7f:73')
+        self.assertNoError('8C:85:90:4F:7F:73')
+
+    #---------------------------------------------------------------------------
+    def test_MalformedAddress(self):
+        self.assertError('8c:85:0:4f:7f:73')
+        self.assertError('8c.85.90.4f.7f.73')
+        self.assertError('8C85904F7F73')
 
     #---------------------------------------------------------------------------
     def test_InvalidAddress(self):
-        self.assertError('8c:85:0:4f:7f:73')
+        self.assertError('localhost')
+        self.assertError('-')
+        self.assertError(':::::')
+
+    #---------------------------------------------------------------------------
+    def test_WindowsAddress(self):
+        self.assertNoError('8c-85-90-4f-7f-73')
 
 ################################################################################
 ## MAIN ENTRY
