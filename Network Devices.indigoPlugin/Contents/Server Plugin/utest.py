@@ -19,6 +19,15 @@ class CommonInternnetServices(unittest.TestCase):
         self.assertTrue(available)
 
 ################################################################################
+class NullClient(unittest.TestCase):
+
+    #---------------------------------------------------------------------------
+    def test_NullClient(self):
+        client = clients.NullClient()
+        available = client.isAvailable()
+        self.assertFalse(available)
+
+################################################################################
 class BasicLocalCommands(unittest.TestCase):
 
     #---------------------------------------------------------------------------
