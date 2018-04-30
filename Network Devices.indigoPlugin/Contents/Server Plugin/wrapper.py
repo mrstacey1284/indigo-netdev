@@ -3,6 +3,7 @@
 import logging
 import urllib2
 
+import arp
 import clients
 import utils
 
@@ -127,13 +128,13 @@ class HTTP(DeviceWrapper):
 class Local(DeviceWrapper):
 
     #---------------------------------------------------------------------------
-    def __init__(self, device):
+    def __init__(self, device, arpTable):
         self.logger = logging.getLogger('Plugin.wrapper.Local')
 
         address = device.pluginProps['address']
 
         self.device = device
-        self.client = clients.NullClient()
+        self.client = clients.ArpClient(address, arpTable)
 
     #---------------------------------------------------------------------------
     @staticmethod

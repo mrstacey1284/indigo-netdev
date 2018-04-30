@@ -146,6 +146,23 @@ class HttpClient(ClientBase):
         return available
 
 ################################################################################
+class ArpClient(ClientBase):
+
+    #---------------------------------------------------------------------------
+    def __init__(self, address, arpTable):
+        ClientBase.__init__(self)
+        self.logger = logging.getLogger('Plugin.client.ArpClient')
+
+        self.address = address
+        self.arpTable = arpTable
+
+    #---------------------------------------------------------------------------
+    # check for the device in the current ARP table
+    def isAvailable(self):
+        self.logger.debug('checking ARP table for device - %s', self.address)
+        return self.arpTable.isActiveHardwareAddr(self.address)
+
+################################################################################
 class SSHClient(ServiceClient):
 
     # FIXME not a big fan of the "commands" dictionary...

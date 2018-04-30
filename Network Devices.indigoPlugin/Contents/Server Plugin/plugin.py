@@ -2,8 +2,8 @@
 
 import logging
 import socket
-import subprocess
 
+import arp
 import wrapper
 import clients
 import utils
@@ -12,14 +12,14 @@ import utils
 class Plugin(indigo.PluginBase):
 
     wrappers = dict()
-
-    # TODO this might be a new class that is shared by Local device types
     arp_cache = None
 
     #---------------------------------------------------------------------------
     def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
         indigo.PluginBase.__init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs)
         self._loadPluginPrefs(pluginPrefs)
+
+        self.arp_cache = arp.ArpCache()
 
     #---------------------------------------------------------------------------
     def __del__(self):
@@ -34,29 +34,7 @@ class Plugin(indigo.PluginBase):
 
     #---------------------------------------------------------------------------
     def rebuildArpCache(self):
-        # TODO limit concurrent calls to arp - abort if already running
-
-        cmd = ['/usr/sbin/arp', '-a']
-
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        pout, perr = proc.communicate()
-
-        cache = [ ]
-
-        # translate command output to cache entries
-        for line in pout.splitlines():
-            parts = line.split()
-            entry = {
-                'hostname': None,
-                'ip_addr': parts[0],
-                'eth_addr': parts[3].upper(),
-                'iface': parts[5]
-            }
-
-            cache.append(entry)
-            self.logger.debug('ARP: ' + str(entry))
-
-        self.arp_cache = cache
+        self.arp_cache.rebuildArpCache()
 
     #---------------------------------------------------------------------------
     def validatePrefsConfigUi(self, values):
@@ -106,7 +84,7 @@ class Plugin(indigo.PluginBase):
         elif typeId == 'http':
             wrap = wrapper.HTTP(device)
         elif typeId == 'local':
-            wrap = wrapper.Local(device)
+            wrap = wrapper.Local(device, self.arp_cache)
         elif typeId == 'ssh':
             wrap = wrapper.SSH(device)
         elif typeId == 'macos':
