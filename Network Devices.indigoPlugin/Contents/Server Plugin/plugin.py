@@ -40,7 +40,7 @@ class Plugin(indigo.PluginBase):
     def validatePrefsConfigUi(self, values):
         errors = indigo.Dict()
 
-        utils.validateConfig_Int('refreshInterval', values, errors, min=1, max=3600)
+        utils.validateConfig_Int('refreshInterval', values, errors, min=60, max=3600)
         utils.validateConfig_Int('connectionTimeout', values, errors, min=0, max=300)
 
         return ((len(errors) == 0), values, errors)
@@ -142,7 +142,7 @@ class Plugin(indigo.PluginBase):
         # read refresh interval
         refreshVal = values.get('refreshInterval', None)
         if refreshVal is None:
-            self.refreshInterval = 60
+            self.refreshInterval = 180
         else:
             self.refreshInterval = int(refreshVal)
         self.logger.debug(u'{refreshInterval} - %d seconds', self.refreshInterval)
