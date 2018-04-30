@@ -149,7 +149,7 @@ class Plugin(indigo.PluginBase):
 
     #---------------------------------------------------------------------------
     def _runLoopStep(self):
-        #TODO self.rebuildArpCache()
+        self.rebuildArpCache()
         self.refreshAllDevices()
 
         # sleep for the configured timeout

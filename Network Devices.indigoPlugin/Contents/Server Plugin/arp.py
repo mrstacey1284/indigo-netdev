@@ -15,7 +15,7 @@ class ArpCache():
 
     #---------------------------------------------------------------------------
     def __init__(self):
-        self.logger = logging.getLogger('Plugin.client.ClientBase')
+        self.logger = logging.getLogger('Plugin.arp.ArpCache')
         self.lock = threading.Lock()
 
     #---------------------------------------------------------------------------

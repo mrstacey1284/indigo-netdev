@@ -148,6 +148,8 @@ class HttpClient(ClientBase):
 ################################################################################
 class ArpClient(ClientBase):
 
+    # NOTE we depend on the ARP table to be maintained outside this client
+
     #---------------------------------------------------------------------------
     def __init__(self, address, arpTable):
         ClientBase.__init__(self)
