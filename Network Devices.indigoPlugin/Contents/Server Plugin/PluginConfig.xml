@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 
 <PluginConfig>
+  <SupportURL>http://forums.indigodomo.com/viewforum.php?f=232</SupportURL>
 
   <Field type="textfield" id="refreshInterval" defaultValue="60">
     <Label>Refresh interval (seconds):</Label>
