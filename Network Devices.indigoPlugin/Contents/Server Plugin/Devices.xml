@@ -28,6 +28,12 @@
         <TriggerLabel>Device Status Changes</TriggerLabel>
         <ControlPageLabel>Device Status</ControlPageLabel>
       </State>
+
+      <State id="lastActiveAt">
+        <ValueType>String</ValueType>
+        <TriggerLabel>Last Active Time Changes</TriggerLabel>
+        <ControlPageLabel>Last Active Time</ControlPageLabel>
+      </State>
     </States>
 
     <UiDisplayStateId>status</UiDisplayStateId>
@@ -54,6 +60,12 @@
         <ValueType>String</ValueType>
         <TriggerLabel>Device Status Changes</TriggerLabel>
         <ControlPageLabel>Device Status</ControlPageLabel>
+      </State>
+
+      <State id="lastActiveAt">
+        <ValueType>String</ValueType>
+        <TriggerLabel>Last Active Time Changes</TriggerLabel>
+        <ControlPageLabel>Last Active Time</ControlPageLabel>
       </State>
     </States>
 
@@ -87,6 +99,12 @@
         <TriggerLabel>Device Status Changes</TriggerLabel>
         <ControlPageLabel>Device Status</ControlPageLabel>
       </State>
+
+      <State id="lastActiveAt">
+        <ValueType>String</ValueType>
+        <TriggerLabel>Last Active Time Changes</TriggerLabel>
+        <ControlPageLabel>Last Active Time</ControlPageLabel>
+      </State>
     </States>
 
     <UiDisplayStateId>status</UiDisplayStateId>
@@ -114,6 +132,18 @@
         <ValueType>String</ValueType>
         <TriggerLabel>Device Status Changes</TriggerLabel>
         <ControlPageLabel>Device Status</ControlPageLabel>
+      </State>
+
+      <State id="lastActiveAt">
+        <ValueType>String</ValueType>
+        <TriggerLabel>Last Active Time Changes</TriggerLabel>
+        <ControlPageLabel>Last Active Time</ControlPageLabel>
+      </State>
+
+      <State id="clock">
+        <ValueType>String</ValueType>
+        <TriggerLabel>Clock Time Changes</TriggerLabel>
+        <ControlPageLabel>Clock Time</ControlPageLabel>
       </State>
     </States>
 

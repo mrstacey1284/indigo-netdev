@@ -2,10 +2,13 @@
 
 import logging
 import urllib2
+import time
 
 import arp
 import clients
 import utils
+
+# TODO set setErrorStateOnServer(msg) appropriately
 
 ################################################################################
 # wrapper base class for device types
@@ -16,7 +19,7 @@ class DeviceWrapper():
         raise NotImplementedError()
 
     #---------------------------------------------------------------------------
-    # sub-classes should override this for their specific device states
+    # basic check to see if the virtual device is responding
     def updateStatus(self):
         device = self.device
 
@@ -24,11 +27,18 @@ class DeviceWrapper():
             self.logger.debug(u'%s is AVAILABLE', device.name)
             device.updateStateOnServer('active', True)
             device.updateStateOnServer('status', 'Active')
+            device.updateStateOnServer('lastActiveAt', time.strftime('%c'))
 
         else:
             self.logger.debug(u'%s is UNAVAILABLE', device.name)
             device.updateStateOnServer('active', False)
             device.updateStateOnServer('status', 'Inactive')
+
+        self.updateDeviceInfo()
+
+    #---------------------------------------------------------------------------
+    # sub-classes should overide this for their custom states
+    def updateDeviceInfo(self): pass
 
 ################################################################################
 # base wrapper class for relay-type devices
@@ -49,7 +59,7 @@ class RelayDeviceWrapper(DeviceWrapper):
         self.logger.warn(u'Not supported - Turn On %s', self.device.name)
 
     #---------------------------------------------------------------------------
-    # basic check to see if the server is responding
+    # basic check to see if the virtual device is responding
     def updateStatus(self):
         device = self.device
 
@@ -59,6 +69,8 @@ class RelayDeviceWrapper(DeviceWrapper):
         else:
             self.logger.debug(u'%s is UNAVAILABLE', device.name)
             device.updateStateOnServer('onOffState', 'off')
+
+        self.updateDeviceInfo()
 
 ################################################################################
 # plugin device wrapper for Network Service devices
@@ -140,6 +152,11 @@ class Local(DeviceWrapper):
     @staticmethod
     def validateConfig(values, errors):
         utils.validateConfig_MAC('address', values, errors, emptyOk=False)
+
+    #---------------------------------------------------------------------------
+    def updateDeviceInfo(self):
+        clock = self.client.getLastSeenTime()
+        self.device.updateStateOnServer('clock', clock)
 
 ################################################################################
 # plugin device wrapper for SSH Device types

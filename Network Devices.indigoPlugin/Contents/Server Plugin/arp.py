@@ -69,7 +69,14 @@ class ArpCache():
         self.lock.release()
 
     #---------------------------------------------------------------------------
-    def isActiveHardwareAddr(self, address):
+    def getClock(self, address):
         addr = address.upper()
-        return (addr in self.cache)
+        return self.cache.get(addr)
+
+    #---------------------------------------------------------------------------
+    def isActiveHardwareAddr(self, address):
+        clock = self.getClock(address)
+
+        # TODO handle expired clock
+        return (clock is not None)
 
