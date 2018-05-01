@@ -21,6 +21,15 @@ class ArpCache():
         self.timeout = timeout
 
     #---------------------------------------------------------------------------
+    def _normalizeAddress(self, address):
+        addr = address.upper()
+
+        # TODO make sure all octets are padded
+        # TODO return None for invalid address
+
+        return addr
+
+    #---------------------------------------------------------------------------
     def rebuildArpCache(self):
         # XXX it would be nice to lock these in a mutex...
         self.updateCurrentDevices()
@@ -40,11 +49,11 @@ class ArpCache():
         # translate command output to cache entries
         for line in pout.splitlines():
             parts = line.split()
-            addr = parts[3].upper()
 
-            # TODO look for valid addresses only
+            addr = self._normalizeAddress(parts[3])
+            if addr is None: continue
 
-            self.cache[addr] = time.clock()
+            self.cache[addr] = time.time()
             self.logger.debug('device found: %s', addr)
 
         self.lock.release()
@@ -53,12 +62,11 @@ class ArpCache():
     def expireOldDevices(self):
         expired = list()
 
-        now = time.clock()
         self.lock.acquire()
 
         # first, find all the expired keys
-        for addr, last_seen in self.cache.items():
-            if now - last_seen >= self.timeout:
+        for addr in self.cache.keys():
+            if not self.isActive(addr):
                 expired.append(addr)
 
         # now, delete the expired addresses
@@ -69,14 +77,14 @@ class ArpCache():
         self.lock.release()
 
     #---------------------------------------------------------------------------
-    def getClock(self, address):
-        addr = address.upper()
-        return self.cache.get(addr)
+    def isActive(self, address):
+        addr = self._normalizeAddress(address)
 
-    #---------------------------------------------------------------------------
-    def isActiveHardwareAddr(self, address):
-        clock = self.getClock(address)
+        last = self.cache.get(addr)
+        if last is None: return False
 
-        # TODO handle expired clock
-        return (clock is not None)
+        now = time.time()
+        diff = now - last
+
+        return (diff < self.timeout)
 

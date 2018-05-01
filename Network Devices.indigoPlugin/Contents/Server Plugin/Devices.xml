@@ -139,12 +139,6 @@
         <TriggerLabel>Last Active Time Changes</TriggerLabel>
         <ControlPageLabel>Last Active Time</ControlPageLabel>
       </State>
-
-      <State id="clock">
-        <ValueType>String</ValueType>
-        <TriggerLabel>Clock Time Changes</TriggerLabel>
-        <ControlPageLabel>Clock Time</ControlPageLabel>
-      </State>
     </States>
 
     <UiDisplayStateId>status</UiDisplayStateId>

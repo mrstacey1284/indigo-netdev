@@ -162,12 +162,7 @@ class ArpClient(ClientBase):
     # check for the device in the current ARP table
     def isAvailable(self):
         self.logger.debug('checking ARP table for device - %s', self.address)
-        return self.arpTable.isActiveHardwareAddr(self.address)
-
-    #---------------------------------------------------------------------------
-    # return the time the device was last seen (clock value)
-    def getLastSeenTime(self):
-        return self.arpTable.getClock(self.address)
+        return self.arpTable.isActive(self.address)
 
 ################################################################################
 class SSHClient(ServiceClient):

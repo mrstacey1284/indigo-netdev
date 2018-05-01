@@ -153,11 +153,6 @@ class Local(DeviceWrapper):
     def validateConfig(values, errors):
         utils.validateConfig_MAC('address', values, errors, emptyOk=False)
 
-    #---------------------------------------------------------------------------
-    def updateDeviceInfo(self):
-        clock = self.client.getLastSeenTime()
-        self.device.updateStateOnServer('clock', clock)
-
 ################################################################################
 # plugin device wrapper for SSH Device types
 class SSH(RelayDeviceWrapper):

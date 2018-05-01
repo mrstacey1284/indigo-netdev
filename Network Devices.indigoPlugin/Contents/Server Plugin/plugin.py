@@ -146,7 +146,7 @@ class Plugin(indigo.PluginBase):
         self.logger.debug(u'{refreshInterval} - %d seconds', self.refreshInterval)
 
         # TODO add user-defined arp timeout
-        self.arp_cache = arp.ArpCache()
+        self.arp_cache = arp.ArpCache(90)
 
     #---------------------------------------------------------------------------
     def _runLoopStep(self):
