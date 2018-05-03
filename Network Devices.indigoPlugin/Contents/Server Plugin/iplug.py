@@ -9,7 +9,7 @@ import indigo
 class ThreadedPlugin(indigo.PluginBase):
 
     # delay between loop steps, set by plugin config
-    loopDelay = None
+    threadLoopDelay = None
 
     #---------------------------------------------------------------------------
     # subclasses should invoke the base __init__ if overidden
@@ -47,14 +47,14 @@ class ThreadedPlugin(indigo.PluginBase):
         self.indigo_log_handler.setLevel(self.logLevel)
 
         # save loop delay
-        self.loopDelay = self.getPrefAsInt(prefs, 'loopDelay', 60)
+        self.threadLoopDelay = self.getPrefAsInt(prefs, 'threadLoopDelay', 60)
 
     #---------------------------------------------------------------------------
     # reload the plugin prefs whenever the config dialog is closed
-    def closedPrefsConfigUi(self, values, canceled):
+    def closedPrefsConfigUi(self, prefs, canceled):
         if canceled: return
 
-        self.loadPluginPrefs(pluginPrefs)
+        self.loadPluginPrefs(prefs)
 
     #---------------------------------------------------------------------------
     # perform the work in the thread loop for the plugin
@@ -71,7 +71,7 @@ class ThreadedPlugin(indigo.PluginBase):
                 self.runLoopStep()
 
                 # sleep for the configured timeout
-                self.sleep(self.loopDelay)
+                self.sleep(self.threadLoopDelay)
 
         except self.StopThread:
             pass

@@ -19,8 +19,9 @@ class Plugin(iplug.ThreadedPlugin):
     def validatePrefsConfigUi(self, values):
         errors = indigo.Dict()
 
-        utils.validateConfig_Int('refreshInterval', values, errors, min=60, max=3600)
+        utils.validateConfig_Int('threadLoopDelay', values, errors, min=60, max=3600)
         utils.validateConfig_Int('connectionTimeout', values, errors, min=0, max=300)
+        utils.validateConfig_Int('arpCacheTimeout', values, errors, min=60, max=3600)
 
         return ((len(errors) == 0), values, errors)
 
@@ -86,7 +87,7 @@ class Plugin(iplug.ThreadedPlugin):
         sockTimeout = self.getPrefAsInt(prefs, 'connectionTimeout', 5)
         socket.setdefaulttimeout(sockTimeout)
 
-        # global socket connection timeout - XXX does this affect all modules?
+        # setup the arp cache with configured timeout
         arpTimeout = self.getPrefAsInt(prefs, 'arpCacheTimeout', 300)
         self.arp_cache = arp.ArpCache(300)
 

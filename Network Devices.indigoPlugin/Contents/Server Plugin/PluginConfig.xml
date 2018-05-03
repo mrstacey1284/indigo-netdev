@@ -3,10 +3,10 @@
 <PluginConfig>
   <SupportURL>http://forums.indigodomo.com/viewforum.php?f=232</SupportURL>
 
-  <Field type="textfield" id="refreshInterval" defaultValue="60">
+  <Field type="textfield" id="threadLoopDelay" defaultValue="60">
     <Label>Refresh interval (seconds):</Label>
   </Field>
-  <Field id="refreshIntervalHelp" type="label" fontSize="mini" alignWithControl="true">
+  <Field id="threadLoopDelayHelp" type="label" fontSize="mini" alignWithControl="true">
     <Label>How often devices will be polled for status (60-3600 seconds)</Label>
   </Field>
 
@@ -15,6 +15,13 @@
   </Field>
   <Field id="connectionTimeoutHelp" type="label" fontSize="mini" alignWithControl="true">
     <Label>Timeout for network connection attempts (1-300)</Label>
+  </Field>
+
+  <Field type="textfield" id="arpCacheTimeout" defaultValue="300">
+    <Label>ARP cache timeout (seconds):</Label>
+  </Field>
+  <Field id="arpCacheTimeoutHelp" type="label" fontSize="mini" alignWithControl="true">
+    <Label>Set timeout for expired ARP cache entires (60-3600 seconds)</Label>
   </Field>
 
   <Field id="advConfigSep" type="separator" />
