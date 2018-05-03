@@ -3,36 +3,17 @@
 import logging
 import socket
 
+import iplug
 import arp
 import wrapper
 import clients
 import utils
 
 ################################################################################
-class Plugin(indigo.PluginBase):
+class Plugin(iplug.ThreadedPlugin):
 
     wrappers = dict()
     arp_cache = None
-
-    #---------------------------------------------------------------------------
-    def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
-        indigo.PluginBase.__init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs)
-        self._loadPluginPrefs(pluginPrefs)
-
-    #---------------------------------------------------------------------------
-    def __del__(self):
-        indigo.PluginBase.__del__(self)
-
-    #---------------------------------------------------------------------------
-    def refreshAllDevices(self):
-        # update all enabled and configured devices
-        for id in self.wrappers:
-            wrap = self.wrappers[id]
-            wrap.updateStatus()
-
-    #---------------------------------------------------------------------------
-    def rebuildArpCache(self):
-        self.arp_cache.rebuildArpCache()
 
     #---------------------------------------------------------------------------
     def validatePrefsConfigUi(self, values):
@@ -63,15 +44,9 @@ class Plugin(indigo.PluginBase):
         return ((len(errors) == 0), values, errors)
 
     #---------------------------------------------------------------------------
-    def closedPrefsConfigUi(self, values, canceled):
-        if canceled: return
-        self._loadPluginPrefs(values)
-
-    #---------------------------------------------------------------------------
     def deviceStartComm(self, device):
+        iplug.ThreadedPlugin.deviceStartComm(self, device)
         typeId = device.deviceTypeId
-
-        self.logger.debug(u'Starting device - %s [%s]', device.name, typeId)
 
         wrap = None
 
@@ -100,61 +75,38 @@ class Plugin(indigo.PluginBase):
 
     #---------------------------------------------------------------------------
     def deviceStopComm(self, device):
-        self.logger.debug(u'Stopping device: %s', device.name)
-
+        iplug.ThreadedPlugin.deviceStopComm(self, device)
         self.wrappers.pop(device.id, None)
 
     #---------------------------------------------------------------------------
-    def runConcurrentThread(self):
-        self.logger.debug(u'Thread Started')
-
-        try:
-
-            while not self.stopThread:
-                self._runLoopStep()
-
-        except self.StopThread:
-            pass
-
-        self.logger.debug(u'Thread Stopped')
-
-    #---------------------------------------------------------------------------
-    def _loadPluginPrefs(self, values):
-        # setup logging system
-        logLevel = values.get('logLevel', None)
-        if logLevel is None:
-            self.logLevel = 20
-        else:
-            self.logLevel = int(logLevel)
-        self.indigo_log_handler.setLevel(self.logLevel)
-        self.logger.debug(u'{logLevel} - %s', self.logLevel)
+    def loadPluginPrefs(self, prefs):
+        iplug.ThreadedPlugin.loadPluginPrefs(self, prefs)
 
         # global socket connection timeout - XXX does this affect all modules?
-        timeoutVal = values.get('connectionTimeout', None)
-        if timeoutVal is None:
-            socket.setdefaulttimeout(5)
-        else:
-            socket.setdefaulttimeout(int(timeoutVal))
-        self.logger.debug(u'{connectionTimeout} - %d sec', socket.getdefaulttimeout())
+        sockTimeout = self.getPrefAsInt(prefs, 'connectionTimeout', 5)
+        socket.setdefaulttimeout(sockTimeout)
 
-        # read refresh interval
-        refreshVal = values.get('refreshInterval', None)
-        if refreshVal is None:
-            self.refreshInterval = 180
-        else:
-            self.refreshInterval = int(refreshVal)
-        self.logger.debug(u'{refreshInterval} - %d seconds', self.refreshInterval)
-
-        # TODO add user-defined arp timeout
-        self.arp_cache = arp.ArpCache(90)
+        # global socket connection timeout - XXX does this affect all modules?
+        arpTimeout = self.getPrefAsInt(prefs, 'arpCacheTimeout', 300)
+        self.arp_cache = arp.ArpCache(300)
 
     #---------------------------------------------------------------------------
-    def _runLoopStep(self):
+    def refreshAllDevices(self):
+        # update all enabled and configured devices
+        for id in self.wrappers:
+            wrap = self.wrappers[id]
+            wrap.updateStatus()
+
+    #---------------------------------------------------------------------------
+    def rebuildArpCache(self):
+        self.arp_cache.rebuildArpCache()
+
+    #---------------------------------------------------------------------------
+    def runLoopStep(self):
+        iplug.ThreadedPlugin.runLoopStep(self)
+
         self.rebuildArpCache()
         self.refreshAllDevices()
-
-        # sleep for the configured timeout
-        self.sleep(self.refreshInterval)
 
     #---------------------------------------------------------------------------
     # Relay / Dimmer Action callback
