@@ -6,19 +6,22 @@ import subprocess
 import threading
 
 # TODO add some unit tests for parsing arp command output
-# TODO support a user-defined timeout for entries
 
 ################################################################################
 class ArpCache():
 
-    lock = None
+    cmdLock = None
+    cacheLock = None
+
     cache = dict()
 
     #---------------------------------------------------------------------------
     def __init__(self, timeout=300):
         self.logger = logging.getLogger('Plugin.arp.ArpCache')
         self.timeout = timeout
-        self.lock = threading.RLock()
+
+        self.cmdLock = threading.Lock()
+        self.cacheLock = threading.RLock()
 
     #---------------------------------------------------------------------------
     def _normalizeAddress(self, address):
@@ -31,23 +34,29 @@ class ArpCache():
 
     #---------------------------------------------------------------------------
     def rebuildArpCache(self):
-        self.lock.acquire()
+        self.cacheLock.acquire()
 
         self.updateCurrentDevices()
         self.purgeInactiveDevices()
 
-        self.lock.release()
+        self.cacheLock.release()
 
     #---------------------------------------------------------------------------
     def updateCurrentDevices(self):
-        # TODO limit concurrent calls to arp - abort if already running
+        # this command takes some time to run so we will bail if
+        # another thread is already executing the arp command
+        if not self.cmdLock.acquire(False):
+            self.logger.warn('/usr/sbin/arp: already in use')
+            return
 
         cmd = ['/usr/sbin/arp', '-a']
 
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         pout, perr = proc.communicate()
 
-        self.lock.acquire()
+        self.cmdLock.release()
+
+        self.cacheLock.acquire()
 
         # translate command output to cache entries
         for line in pout.splitlines():
@@ -59,13 +68,13 @@ class ArpCache():
             self.cache[addr] = time.time()
             self.logger.debug('device found: %s', addr)
 
-        self.lock.release()
+        self.cacheLock.release()
 
     #---------------------------------------------------------------------------
     def purgeInactiveDevices(self):
         toBePurged = list()
 
-        self.lock.acquire()
+        self.cacheLock.acquire()
 
         # first, find all the expired keys
         for addr in self.cache.keys():
@@ -76,7 +85,7 @@ class ArpCache():
         # now, delete the expired addresses
         for addr in toBePurged: del self.cache[addr]
 
-        self.lock.release()
+        self.cacheLock.release()
 
     #---------------------------------------------------------------------------
     def isActive(self, address):
