@@ -42,24 +42,34 @@ class ArpCache():
         self.cacheLock.release()
 
     #---------------------------------------------------------------------------
-    def updateCurrentDevices(self):
-        # this command takes some time to run so we will bail if
+    def _getRawArpTable(self):
+        # the command takes some time to run so we will bail if
         # another thread is already executing the arp command
         if not self.cmdLock.acquire(False):
             self.logger.warn('/usr/sbin/arp: already in use')
-            return
+            return None
 
         cmd = ['/usr/sbin/arp', '-a']
+        self.logger.debug('exec: %s', cmd)
 
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        pout, perr = proc.communicate()
+        try:
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            pout, perr = proc.communicate()
+        except:
+            pout = None
 
         self.cmdLock.release()
+
+        return pout
+
+    #---------------------------------------------------------------------------
+    def updateCurrentDevices(self):
+        rawOutput = self._getRawArpTable()
 
         self.cacheLock.acquire()
 
         # translate command output to cache entries
-        for line in pout.splitlines():
+        for line in rawOutput.splitlines():
             parts = line.split()
 
             addr = self._normalizeAddress(parts[3])
