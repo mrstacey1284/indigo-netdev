@@ -17,8 +17,8 @@ class ArpCache():
     #---------------------------------------------------------------------------
     def __init__(self, timeout=300):
         self.logger = logging.getLogger('Plugin.arp.ArpCache')
-        self.lock = threading.Lock()
         self.timeout = timeout
+        self.lock = threading.RLock()
 
     #---------------------------------------------------------------------------
     def _normalizeAddress(self, address):
@@ -31,9 +31,12 @@ class ArpCache():
 
     #---------------------------------------------------------------------------
     def rebuildArpCache(self):
-        # XXX it would be nice to lock these in a mutex...
+        self.lock.acquire()
+
         self.updateCurrentDevices()
-        self.expireOldDevices()
+        self.purgeInactiveDevices()
+
+        self.lock.release()
 
     #---------------------------------------------------------------------------
     def updateCurrentDevices(self):
@@ -59,20 +62,19 @@ class ArpCache():
         self.lock.release()
 
     #---------------------------------------------------------------------------
-    def expireOldDevices(self):
-        expired = list()
+    def purgeInactiveDevices(self):
+        toBePurged = list()
 
         self.lock.acquire()
 
         # first, find all the expired keys
         for addr in self.cache.keys():
             if not self.isActive(addr):
-                expired.append(addr)
+                self.logger.debug('device expired: %s; marked for removal', addr)
+                toBePurged.append(addr)
 
         # now, delete the expired addresses
-        for addr in expired:
-            self.logger.debug('device expired: %s', addr)
-            del self.cache[addr]
+        for addr in toBePurged: del self.cache[addr]
 
         self.lock.release()
 
@@ -85,6 +87,8 @@ class ArpCache():
 
         now = time.time()
         diff = now - last
+
+        self.logger.debug('device %s last activity was %d sec ago', address, diff)
 
         return (diff < self.timeout)
 
