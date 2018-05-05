@@ -7,7 +7,7 @@
     <Label>Refresh interval (seconds):</Label>
   </Field>
   <Field id="threadLoopDelayHelp" type="label" fontSize="mini" alignWithControl="true">
-    <Label>How often devices will be polled for status (60-3600 seconds)</Label>
+    <Label>Time between device updates (60-3600)</Label>
   </Field>
 
   <Field type="textfield" id="connectionTimeout" defaultValue="5">

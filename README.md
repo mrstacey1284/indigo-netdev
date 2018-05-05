@@ -51,6 +51,15 @@ Pings an address and reports 'Active' if it responds succesfully.
 
 Examine the HTTP status of a path and set device as OK or ERROR.
 
+### Local Devices
+
+Uses the local ARP table to find devices on the network by their hardware or MAC address.
+
+*NOTE* this device type depends on the `arp` command.  You can see the active devices by
+running `arp -a` on your Indigo server to troubleshoot issues.  Due to different network
+configurations and routers, some wireless devices may not be seen on a wired network.  In
+this case, joining the wireless network on the Indigo server may help.
+
 ### SSH Server
 
 All SSH commands are authenticated using a shared keypair.  This must be generated and
