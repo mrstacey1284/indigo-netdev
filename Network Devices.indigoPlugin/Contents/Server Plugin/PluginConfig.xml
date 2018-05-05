@@ -17,11 +17,11 @@
     <Label>Timeout for network connection attempts (1-300)</Label>
   </Field>
 
-  <Field type="textfield" id="arpCacheTimeout" defaultValue="300">
-    <Label>ARP cache timeout (seconds):</Label>
+  <Field type="textfield" id="arpCacheTimeout" defaultValue="30">
+    <Label>ARP cache timeout (minutes):</Label>
   </Field>
   <Field id="arpCacheTimeoutHelp" type="label" fontSize="mini" alignWithControl="true">
-    <Label>Set timeout for expired ARP cache entires (60-3600 seconds)</Label>
+    <Label>Set timeout for expired ARP cache entires (1-1440)</Label>
   </Field>
 
   <Field id="advConfigSep" type="separator" />

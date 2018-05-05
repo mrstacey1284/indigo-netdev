@@ -14,9 +14,10 @@ class ArpCache():
     cacheLock = None
 
     cache = dict()
+    timeout = 0
 
     #---------------------------------------------------------------------------
-    def __init__(self, timeout=300):
+    def __init__(self, timeout=5):
         self.logger = logging.getLogger('Plugin.arp.ArpCache')
         self.timeout = timeout
 
@@ -105,9 +106,9 @@ class ArpCache():
         if last is None: return False
 
         now = time.time()
-        diff = now - last
+        diff = (now - last) / 60
 
-        self.logger.debug('device %s last activity was %d sec ago', address, diff)
+        self.logger.debug('device %s last activity was %d min ago', address, diff)
 
         return (diff < self.timeout)
 

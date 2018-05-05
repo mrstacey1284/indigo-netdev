@@ -21,7 +21,7 @@ class Plugin(iplug.ThreadedPlugin):
 
         utils.validateConfig_Int('threadLoopDelay', values, errors, min=60, max=3600)
         utils.validateConfig_Int('connectionTimeout', values, errors, min=0, max=300)
-        utils.validateConfig_Int('arpCacheTimeout', values, errors, min=60, max=3600)
+        utils.validateConfig_Int('arpCacheTimeout', values, errors, min=1, max=1440)
 
         return ((len(errors) == 0), values, errors)
 
