@@ -236,9 +236,3 @@ class ValidateMacAddress(unittest.TestCase):
     def test_WindowsAddress(self):
         self.assertNoError('8c-85-90-4f-7f-73')
 
-################################################################################
-## MAIN ENTRY
-
-if __name__ == '__main__':
-    unittest.main(verbosity=2)
-

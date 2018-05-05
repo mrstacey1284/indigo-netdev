@@ -92,9 +92,3 @@ class LocalHostSSH(unittest.TestCase):
         available = self.client.isAvailable()
         self.assertTrue(available)
 
-################################################################################
-## MAIN ENTRY
-
-if __name__ == '__main__':
-    unittest.main(verbosity=2)
-
