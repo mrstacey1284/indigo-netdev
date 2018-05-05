@@ -84,14 +84,6 @@ system from the command line.
 
 *NOTE* once turned off, these devices must be turned on at the system.
 
-### macOS Server
-
-*Not Yet Implemented*
-
-These will function much like SSH Servers with specific configuration to macOS.
-
-*NOTE* once turned off, these devices must be turned on at the system.
-
 ## Usage
 
 Once devices are configured, their state may be monitored for triggers.  Servers and devices
