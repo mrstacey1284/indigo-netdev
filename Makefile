@@ -1,13 +1,24 @@
 # Makefile for indigo-netdev
 
 PLUGIN_NAME = Network Devices
-PYTHONPATH = "$(PLUGIN_NAME).indigoPlugin/Contents/Server Plugin/"
-PYTHON = PYTHONPATH=$(PYTHONPATH) $(shell which python)
 
-.PHONY: clean test
+PLUGIN_DIR = $(PLUGIN_NAME).indigoPlugin
+ZIPFILE = $(PLUGIN_NAME).zip
+PYTHONPATH = "$(PLUGIN_DIR)/Contents/Server Plugin/"
+
+DELETE_FILE = rm -f
+EXECUTE_PY = PYTHONPATH=$(PYTHONPATH) $(shell which python)
+
+.PHONY: clean test dist
 
 test: clean
-	$(PYTHON) -m unittest discover -v ./test/
+	$(EXECUTE_PY) -m unittest discover -v ./test/
+
+dist: clean zipfile
+
+zipfile:
+	zip -9r "$(ZIPFILE)" "$(PLUGIN_DIR)"
 
 clean:
-	find . -name '*.pyc' -exec rm {} \;
+	$(DELETE_FILE) "$(ZIPFILE)"
+	find . -name '*.pyc' -exec $(DELETE_FILE) {} \;
