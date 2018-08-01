@@ -7,7 +7,6 @@ import iplug
 import arp
 import wrapper
 import clients
-import utils
 
 ################################################################################
 class Plugin(iplug.ThreadedPlugin):
@@ -19,9 +18,9 @@ class Plugin(iplug.ThreadedPlugin):
     def validatePrefsConfigUi(self, values):
         errors = indigo.Dict()
 
-        utils.validateConfig_Int('threadLoopDelay', values, errors, min=60, max=3600)
-        utils.validateConfig_Int('connectionTimeout', values, errors, min=0, max=300)
-        utils.validateConfig_Int('arpCacheTimeout', values, errors, min=1, max=1440)
+        iplug.validateConfig_Int('threadLoopDelay', values, errors, min=60, max=3600)
+        iplug.validateConfig_Int('connectionTimeout', values, errors, min=0, max=300)
+        iplug.validateConfig_Int('arpCacheTimeout', values, errors, min=1, max=1440)
 
         return ((len(errors) == 0), values, errors)
 

@@ -1,33 +1,7 @@
-# Makefile for indigo-netdev - Network Devices
+# Makefile for Indigo Network Devices plugin
 
 PLUGIN_NAME = Network Devices
+DEPLOY_HOST = jarvis@lcars.local
+DEPLOY_PATH = /Library/Application\ Support/Perceptive\ Automation/Indigo\ 7/Plugins
 
-PLUGIN_DIR = $(PLUGIN_NAME).indigoPlugin
-ZIPFILE = $(PLUGIN_NAME).zip
-PYTHONPATH = "$(PLUGIN_DIR)/Contents/Server Plugin/"
-
-DELETE_FILE = rm -f
-EXECUTE_PY = PYTHONPATH=$(PYTHONPATH) $(shell which python)
-
-################################################################################
-.PHONY: all clean test dist
-
-################################################################################
-test: clean
-	$(EXECUTE_PY) -m unittest discover -v ./test/
-
-################################################################################
-dist: clean zipfile
-
-################################################################################
-zipfile:
-	zip -9r "$(ZIPFILE)" "$(PLUGIN_DIR)"
-
-################################################################################
-clean:
-	$(DELETE_FILE) "$(ZIPFILE)"
-	find . -name '*.pyc' -exec $(DELETE_FILE) {} \;
-
-################################################################################
-all: clean test dist
-
+include iplug.mk

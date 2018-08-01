@@ -6,7 +6,7 @@ import time
 
 import arp
 import clients
-import utils
+import iplug
 
 # TODO set setErrorStateOnServer(msg) appropriately
 
@@ -90,8 +90,8 @@ class Service(DeviceWrapper):
     #---------------------------------------------------------------------------
     @staticmethod
     def validateConfig(values, errors):
-        utils.validateConfig_Hostname('address', values, errors, emptyOk=False)
-        utils.validateConfig_Int('port', values, errors, min=1, max=65536)
+        iplug.validateConfig_Hostname('address', values, errors, emptyOk=False)
+        iplug.validateConfig_Int('port', values, errors, min=1, max=65536)
 
 ################################################################################
 # plugin device wrapper for Ping Status devices
@@ -109,7 +109,7 @@ class Ping(DeviceWrapper):
     #---------------------------------------------------------------------------
     @staticmethod
     def validateConfig(values, errors):
-        utils.validateConfig_Hostname('address', values, errors, emptyOk=False)
+        iplug.validateConfig_Hostname('address', values, errors, emptyOk=False)
 
 ################################################################################
 # plugin device wrapper for HTTP Status devices
@@ -127,7 +127,7 @@ class HTTP(DeviceWrapper):
     #---------------------------------------------------------------------------
     @staticmethod
     def validateConfig(values, errors):
-        utils.validateConfig_URL('url', values, errors, emptyOk=False)
+        iplug.validateConfig_URL('url', values, errors, emptyOk=False)
 
         # update 'address' for proper display
         url = values['url']
@@ -151,7 +151,7 @@ class Local(DeviceWrapper):
     #---------------------------------------------------------------------------
     @staticmethod
     def validateConfig(values, errors):
-        utils.validateConfig_MAC('address', values, errors, emptyOk=False)
+        iplug.validateConfig_MAC('address', values, errors, emptyOk=False)
 
 ################################################################################
 # plugin device wrapper for SSH Device types
@@ -175,14 +175,14 @@ class SSH(RelayDeviceWrapper):
     #---------------------------------------------------------------------------
     @staticmethod
     def validateConfig(values, errors):
-        utils.validateConfig_Hostname('address', values, errors, emptyOk=False)
-        utils.validateConfig_Int('port', values, errors, min=1, max=65536)
+        iplug.validateConfig_Hostname('address', values, errors, emptyOk=False)
+        iplug.validateConfig_Int('port', values, errors, min=1, max=65536)
 
-        utils.validateConfig_String('username', values, errors, emptyOk=False)
-        #utils.validateConfig_String('password', values, errors, emptyOk=True)
+        iplug.validateConfig_String('username', values, errors, emptyOk=False)
+        #iplug.validateConfig_String('password', values, errors, emptyOk=True)
 
-        utils.validateConfig_String('cmd_status', values, errors, emptyOk=False)
-        utils.validateConfig_String('cmd_shutdown', values, errors, emptyOk=False)
+        iplug.validateConfig_String('cmd_status', values, errors, emptyOk=False)
+        iplug.validateConfig_String('cmd_shutdown', values, errors, emptyOk=False)
 
     #---------------------------------------------------------------------------
     def turnOff(self):
@@ -217,7 +217,7 @@ class macOS(RelayDeviceWrapper):
     #---------------------------------------------------------------------------
     @staticmethod
     def validateConfig(values, errors):
-        utils.validateConfig_Hostname('address', values, errors, emptyOk=False)
-        utils.validateConfig_String('username', values, errors, emptyOk=False)
-        #utils.validateConfig_String('password', values, errors, emptyOk=True)
+        iplug.validateConfig_Hostname('address', values, errors, emptyOk=False)
+        iplug.validateConfig_String('username', values, errors, emptyOk=False)
+        #iplug.validateConfig_String('password', values, errors, emptyOk=True)
 
