@@ -104,8 +104,6 @@ class Plugin(iplug.ThreadedPlugin):
 
     #---------------------------------------------------------------------------
     def runLoopStep(self):
-        iplug.ThreadedPlugin.runLoopStep(self)
-
         self.rebuildArpCache()
         self.refreshAllDevices()
 
