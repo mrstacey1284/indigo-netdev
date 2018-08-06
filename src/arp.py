@@ -27,11 +27,19 @@ class ArpCache():
     #---------------------------------------------------------------------------
     def _normalizeAddress(self, address):
         addr = address.upper()
-
+        octets = addr.split(':')
+        newOctets = []
+        for block in octets:
+            if len(block) < 2:
+                newOctets.append = '0'+block
+            else:
+                newOctets.append = block
+        
+        normAddr = ':'.join([str(x) for x in newOctets])
         # TODO make sure all octets are padded
         # TODO return None for invalid address
 
-        return addr
+        return normAddr
 
     #---------------------------------------------------------------------------
     def rebuildArpCache(self):
